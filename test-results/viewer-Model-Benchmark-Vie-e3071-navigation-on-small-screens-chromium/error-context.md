@@ -55,7 +55,7 @@
     - button "Toggle Nuxt DevTools" [ref=e71] [cursor=pointer]:
       - img [ref=e72]
     - generic "App load time" [ref=e75]:
-      - generic [ref=e76]: "468"
+      - generic [ref=e76]: "524"
       - generic [ref=e77]: ms
     - button "Toggle Component Inspector" [ref=e79] [cursor=pointer]:
       - img [ref=e80]
