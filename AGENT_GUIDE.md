@@ -1,92 +1,241 @@
-# Project Viewer — Agent Guide
+# Agent Guide - Project Viewer
 
-This app is a **mobile-first Project Viewer**. The UI is **fully driven** by a single source of truth:
+## What This App Does
 
-- `public/data/manifest.json`
-
-Model outputs are served as static files under:
-
-- `public/projects/<project-folder>/<model-file>`
-
-The app renders the selected model output in an **iframe**.
+This is a **project comparison tool** where multiple AI agents implement the same project specification. Each agent creates their own implementation, and users can browse and compare different approaches side-by-side.
 
 ---
 
-## Add a new model output (recommended workflow)
+## Project Structure
 
-### 1) Create (or choose) a project folder
+### Directory Organization
 
-Place your files under:
+```
+public/projects/
+  <project-name>/
+    PROMPT.md           # Project specification (100 words max)
+    <implementation-name>/
+      index.html        # Main entry point
+      ...               # Any additional files
+```
 
-- `public/projects/<project-folder>/`
+**Example:**
+```
+public/projects/
+  traffic-simulation/
+    PROMPT.md
+    reference/
+      index.html
+    agent-claude/
+      index.html
+    agent-gpt4/
+      index.html
+```
 
-Example:
+### Implementation Names
 
-- `public/projects/my-project/`
+Use descriptive names for implementations:
+- `reference` - The original/canonical implementation
+- `agent-<name>` - Agent implementations (e.g., `agent-claude`, `agent-gpt4`)
+- `<username>` - Human implementations
+- `v1`, `v2`, etc. - Versioned implementations
 
-### 2) Add the model file (leaf)
+---
 
-Add a self-contained file that can be iframed. The simplest is an HTML file:
+## Rules for Agents
 
-- `public/projects/my-project/run-2025-12-12.html`
+### ✅ ALLOWED
+- Create NEW implementations in a new directory under the project
+- Add files within your own implementation directory
+- Update `public/data/manifest.json` to register your implementation
 
-Rules:
+### ❌ FORBIDDEN
+- **DO NOT** edit or delete other implementations
+- **DO NOT** modify files in other implementation directories
+- **DO NOT** change the project PROMPT.md after agents start implementing
+- **DO NOT** modify shared resources that other implementations depend on
 
-- Keep the output **self-contained** (avoid runtime dependencies unless they’re also in the same folder).
-- Prefer **relative asset paths** inside that folder (e.g. `./assets/...`).
-- Make sure the output works at its public URL:
-  - `/projects/my-project/run-2025-12-12.html`
+---
 
-### 3) Update `public/data/manifest.json`
+## Adding Your Implementation
 
-Open:
+### Step 1: Create Your Directory
 
-- `public/data/manifest.json`
+Create a new directory for your implementation:
+```
+public/projects/<project-name>/<your-implementation-name>/
+```
 
-Add (or update) an entry in the `projects` array.
+### Step 2: Create Your Files
 
-Each project must include:
+All your files go in your directory. **ALWAYS** include an `index.html` as the main entry point:
 
-- `id`: stable identifier (no spaces)
-- `label`: human label (optional niceness)
-- `folder`: the folder name under `public/projects/`
-- `models`: array of model “files”
+```
+public/projects/<project-name>/<your-implementation-name>/
+  index.html          # REQUIRED - main file
+  style.css           # optional
+  script.js           # optional
+  assets/             # optional
+    ...
+```
 
-Each model must include:
+### Step 3: Make It Self-Contained
 
-- `id`: stable identifier within the project (no spaces)
-- `label`: what shows in the tree (often the filename)
-- `file`: filename within the project folder
+Your implementation should work standalone:
+- ✅ Include all dependencies (or use CDN links)
+- ✅ Use relative paths for local assets (`./assets/image.png`)
+- ✅ Test that it works at its public URL: `/projects/<project>/<impl>/index.html`
+- ❌ Don't rely on files outside your directory
 
-Example:
+### Step 4: Update the Manifest
+
+Edit `public/data/manifest.json` to add your implementation:
 
 ```json
 {
-  "id": "my-project",
-  "label": "My Project",
-  "folder": "my-project",
-  "models": [
+  "version": 1,
+  "root": "projects",
+  "projects": [
     {
-      "id": "run-2025-12-12",
-      "label": "run-2025-12-12.html",
-      "file": "run-2025-12-12.html"
+      "id": "traffic-simulation",
+      "label": "Traffic Simulation",
+      "folder": "traffic-simulation",
+      "models": [
+        {
+          "id": "reference",
+          "label": "Reference Implementation",
+          "file": "reference/index.html"
+        },
+        {
+          "id": "your-impl-name",
+          "label": "Your Implementation Name",
+          "file": "your-impl-name/index.html"
+        }
+      ]
     }
   ]
 }
 ```
 
+**Key fields:**
+- `id` - Unique identifier (no spaces, lowercase with hyphens)
+- `label` - Human-readable name shown in UI
+- `file` - Path relative to project folder (always end with `/index.html`)
+
 ---
 
-## Validation checklist (don’t skip)
+## Implementation Guidelines
 
-- The file exists:
-  - `public/projects/<folder>/<file>`
-- The manifest JSON is valid and matches:
-  - `folder` → the directory name under `public/projects/`
-  - `file` → the filename inside that directory
-- The iframe URL resolves:
-  - `/projects/<folder>/<file>`
-- Don’t break other models:
-  - Don’t rename existing folders/files without updating the manifest.
-  - Keep additions backward compatible.
+### 1. Read the PROMPT.md
 
+Each project has a `PROMPT.md` file (max 100 words) describing what to build. This is your specification.
+
+### 2. Keep It Simple
+
+- Single HTML file is often best
+- Inline CSS and JavaScript are fine
+- Use CDN links for libraries if needed
+
+### 3. Make It Visual
+
+- These projects are displayed in iframes
+- Assume viewport width of 800-1200px
+- Make it responsive if possible
+- No need for external UI controls unless specified
+
+### 4. Test Locally
+
+Before committing, test that:
+```bash
+npm run dev
+```
+Then navigate to your model in the app to verify it displays correctly.
+
+---
+
+## Project Prompt Guidelines
+
+When creating a new project, write a `PROMPT.md` that:
+
+1. **Is concise** - Maximum 100 words
+2. **Specifies the core requirements** - What must be built
+3. **Leaves room for creativity** - Don't over-specify implementation details
+4. **Defines success criteria** - What makes a good implementation
+5. **Is technology-agnostic** - Don't mandate specific frameworks unless necessary
+
+**Good prompt example:**
+> Create a traffic light simulation showing cars on a one-way street. Cars must stop at red lights and proceed on green. Include multiple cars and reasonable timing cycles (3-5 seconds). Visual-only output, no UI controls needed.
+
+**Bad prompt example:**
+> Use React and Three.js to create a 3D traffic simulation with exactly 5 red cars and 3 blue cars, green light duration of 4.2 seconds, using TypeScript and Tailwind CSS...
+
+---
+
+## Validation Checklist
+
+Before submitting your implementation:
+
+- [ ] Created a new directory under the project
+- [ ] Included `index.html` as main entry point
+- [ ] All assets are in my directory or loaded via CDN
+- [ ] Updated `public/data/manifest.json`
+- [ ] Tested locally in the app
+- [ ] Did NOT modify other implementations
+- [ ] Did NOT edit the project PROMPT.md
+
+---
+
+## Tips for Great Implementations
+
+1. **Be creative** - Different approaches make comparisons interesting
+2. **Comment your code** - Help others understand your approach
+3. **Optimize for visibility** - Clear visuals matter in side-by-side comparisons
+4. **Handle edge cases** - Make it robust
+5. **Keep it performant** - Smooth animations, efficient rendering
+
+---
+
+## Example: Adding a Traffic Simulation Implementation
+
+Let's say you want to add your implementation of the traffic simulation:
+
+1. Create directory:
+   ```
+   public/projects/traffic-simulation/agent-yourname/
+   ```
+
+2. Create your HTML:
+   ```html
+   <!-- public/projects/traffic-simulation/agent-yourname/index.html -->
+   <!DOCTYPE html>
+   <html>
+   <head>
+     <title>Traffic Simulation</title>
+     <style>/* your styles */</style>
+   </head>
+   <body>
+     <canvas id="canvas"></canvas>
+     <script>/* your code */</script>
+   </body>
+   </html>
+   ```
+
+3. Update manifest:
+   ```json
+   {
+     "id": "agent-yourname",
+     "label": "Agent YourName Implementation", 
+     "file": "agent-yourname/index.html"
+   }
+   ```
+
+4. Test and commit!
+
+---
+
+## Questions?
+
+- Check existing implementations for examples
+- Ensure your directory structure matches the guidelines
+- Test thoroughly before committing
+- Keep implementations isolated and self-contained

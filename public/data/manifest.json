@@ -3,17 +3,16 @@
   "root": "projects",
   "projects": [
     {
-      "id": "demo-project",
-      "label": "Demo Project",
-      "folder": "demo-project",
+      "id": "traffic-simulation",
+      "label": "Traffic Simulation",
+      "folder": "traffic-simulation",
       "models": [
         {
-          "id": "overview",
-          "label": "overview.html",
-          "file": "overview.html"
+          "id": "reference",
+          "label": "Reference Implementation",
+          "file": "reference/index.html"
         }
       ]
     }
   ]
 }
-
