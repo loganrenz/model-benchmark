@@ -41,3 +41,4 @@ Open [http://localhost:3000](http://localhost:3000) to browse projects.
 - `npm run dev` – start the development server
 - `npm run build` – build for production
 - `npm run start` – preview the production build
+- `npm test` – run Vitest suites

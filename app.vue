@@ -227,32 +227,17 @@ import { computed, ref } from 'vue';
 import { projects } from '~/data/projects';
 import type { ModelBuild, Project } from '~/types/projects';
 
+import { buildNavigationLinks, buildTaskItems, selectDefaultProjectModel } from '~/utils/projects';
+
 const isNavOpen = ref(false);
-const selectedProject = ref<Project | null>(projects[0] ?? null);
-const selectedModel = ref<ModelBuild | null>(projects[0]?.models[0] ?? null);
 
-const navigationLinks = computed(() =>
-  projects.map((project) => ({
-    label: project.title,
-    description: project.summary,
-    defaultOpen: true,
-    slot: 'project',
-    children: project.models.map((model) => ({
-      label: model.name,
-      description: model.description,
-      value: `${project.slug}-${model.id}`,
-      meta: { project, model, id: model.id }
-    }))
-  }))
-);
+const { project: defaultProject, model: defaultModel } = selectDefaultProjectModel(projects);
+const selectedProject = ref<Project | null>(defaultProject);
+const selectedModel = ref<ModelBuild | null>(defaultModel);
 
-const taskItems = computed(() =>
-  (selectedProject.value?.tasks ?? []).map((task) => ({
-    label: task.title,
-    description: task.summary,
-    points: task.details
-  }))
-);
+const navigationLinks = computed(() => buildNavigationLinks(projects));
+
+const taskItems = computed(() => buildTaskItems(selectedProject.value));
 
 function selectProjectModel(project: Project, model: ModelBuild) {
   selectedProject.value = project;

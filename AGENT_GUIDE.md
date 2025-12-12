@@ -26,6 +26,7 @@ model-benchmark/
 - Install dependencies: `npm install`
 - Run locally: `npm run dev`
 - Build for production: `npm run build`
+- Run tests: `npm test` (keep suites up-to-date and ensure they pass before committing)
 
 ## Deployment
 
