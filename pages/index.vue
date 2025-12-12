@@ -6,8 +6,9 @@ defineOptions({ name: 'ProjectViewerPage' })
 const route = useRoute()
 const router = useRouter()
 
-// Load from public/ as the single source of truth (works on Vercel static output too)
-const { data: manifest, error } = await useFetch<Manifest>('/data/manifest.json')
+// Load from public/ as the single source of truth.
+// Client-only avoids SSR/runtime differences on Vercel that can lead to blank screens.
+const { data: manifest, error } = useFetch<Manifest>('/data/manifest.json', { server: false })
 
 const drawerOpen = ref(false)
 
@@ -63,6 +64,10 @@ watch(
             </p>
           </template>
         </UAlert>
+      </div>
+
+      <div v-else-if="!manifest" class="mx-auto flex h-full max-w-md items-center justify-center p-6">
+        <p class="text-sm text-gray-600">Loading…</p>
       </div>
 
       <div v-else-if="!active" class="mx-auto flex h-full max-w-md items-center justify-center p-6">

@@ -4981,16 +4981,10 @@ const __nuxt_component_1 = defineComponent({
     return () => props.slots.default?.();
   }
 });
-const useColorMode = () => {
-  return useState("color-mode").value;
-};
 const _sfc_main$2 = /* @__PURE__ */ defineComponent({
   __name: "app",
   __ssrInlineRender: true,
   setup(__props) {
-    const colorMode = useColorMode();
-    colorMode.preference = "light";
-    colorMode.value = "light";
     useHead({
       htmlAttrs: { class: "light" }
     });
