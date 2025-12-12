@@ -5,6 +5,11 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@nuxt/eslint'],
   css: ['~/assets/main.css'],
 
+  // Ensure Vercel deploy outputs Build Output API format.
+  nitro: {
+    preset: 'vercel'
+  },
+
   /**
    * Force light theme only.
    * - Don't respect system preference
