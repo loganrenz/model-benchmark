@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Simulation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #1a1a1a; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh;
+      font-family: monospace;
+    }
+    canvas { 
+      background: #2d5016; 
+      border: 3px solid #333;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Canvas setup
+    canvas.width = 800;
+    canvas.height = 600;
+    
+    // Configuration
+    const config = {
+      carCount: 8,
+      greenDuration: 3000,  // 3 seconds
+      redDuration: 4000,    // 4 seconds
+      carSpeed: 2,
+      carWidth: 40,
+      carHeight: 60,
+      laneWidth: 100
+    };
+    
+    // Traffic light
+    const trafficLight = {
+      x: canvas.width / 2,
+      y: 150,
+      state: 'green', // 'green' or 'red'
+      lastChange: Date.now(),
+      
+      update() {
+        const now = Date.now();
+        const elapsed = now - this.lastChange;
+        
+        if (this.state === 'green' && elapsed > config.greenDuration) {
+          this.state = 'red';
+          this.lastChange = now;
+        } else if (this.state === 'red' && elapsed > config.redDuration) {
+          this.state = 'green';
+          this.lastChange = now;
+        }
+      },
+      
+      draw() {
+        // Traffic light pole
+        ctx.fillStyle = '#333';
+        ctx.fillRect(this.x - 5, this.y, 10, 80);
+        
+        // Traffic light box
+        ctx.fillStyle = '#222';
+        ctx.fillRect(this.x - 20, this.y - 60, 40, 60);
+        
+        // Red light
+        ctx.fillStyle = this.state === 'red' ? '#ff0000' : '#440000';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y - 40, 12, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Green light
+        ctx.fillStyle = this.state === 'green' ? '#00ff00' : '#004400';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y - 20, 12, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    
+    // Car class
+    class Car {
+      constructor(id) {
+        this.id = id;
+        this.x = canvas.width / 2 - config.carWidth / 2;
+        this.y = canvas.height + id * 120; // Start below canvas, staggered
+        this.speed = config.carSpeed;
+        this.color = this.randomColor();
+      }
+      
+      randomColor() {
+        const colors = ['#ff4444', '#4444ff', '#44ff44', '#ffff44', '#ff44ff', '#44ffff', '#ffffff', '#ff8844'];
+        return colors[this.id % colors.length];
+      }
+      
+      update(cars) {
+        // Check if we need to stop for red light
+        const stopLine = trafficLight.y + 80;
+        const carFront = this.y;
+        
+        if (trafficLight.state === 'red' && carFront > stopLine - 50 && carFront < stopLine + 10) {
+          // Stop at the light
+          return;
+        }
+        
+        // Check for car ahead
+        let canMove = true;
+        for (let car of cars) {
+          if (car.id !== this.id && car.y < this.y && this.y - car.y < config.carHeight + 20) {
+            canMove = false;
+            break;
+          }
+        }
+        
+        if (canMove) {
+          this.y -= this.speed;
+        }
+        
+        // Reset position when off screen
+        if (this.y < -config.carHeight) {
+          this.y = canvas.height + Math.random() * 200;
+        }
+      }
+      
+      draw() {
+        // Car body
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, config.carWidth, config.carHeight);
+        
+        // Car outline
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x, this.y, config.carWidth, config.carHeight);
+        
+        // Windshield
+        ctx.fillStyle = 'rgba(100, 150, 255, 0.3)';
+        ctx.fillRect(this.x + 5, this.y + 5, config.carWidth - 10, 20);
+        
+        // Wheels
+        ctx.fillStyle = '#000';
+        ctx.fillRect(this.x - 3, this.y + 10, 6, 12);
+        ctx.fillRect(this.x + config.carWidth - 3, this.y + 10, 6, 12);
+        ctx.fillRect(this.x - 3, this.y + config.carHeight - 22, 6, 12);
+        ctx.fillRect(this.x + config.carWidth - 3, this.y + config.carHeight - 22, 6, 12);
+      }
+    }
+    
+    // Create cars
+    const cars = [];
+    for (let i = 0; i < config.carCount; i++) {
+      cars.push(new Car(i));
+    }
+    
+    // Animation loop
+    function animate() {
+      // Clear canvas
+      ctx.fillStyle = '#2d5016';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw road
+      ctx.fillStyle = '#444';
+      const roadX = canvas.width / 2 - config.laneWidth / 2;
+      ctx.fillRect(roadX, 0, config.laneWidth, canvas.height);
+      
+      // Draw road markings
+      ctx.strokeStyle = '#ffff00';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([20, 20]);
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Draw stop line
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(roadX, trafficLight.y + 80);
+      ctx.lineTo(roadX + config.laneWidth, trafficLight.y + 80);
+      ctx.stroke();
+      
+      // Update and draw traffic light
+      trafficLight.update();
+      trafficLight.draw();
+      
+      // Update and draw cars
+      cars.forEach(car => {
+        car.update(cars);
+        car.draw();
+      });
+      
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
+  </script>
+</body>
+</html>

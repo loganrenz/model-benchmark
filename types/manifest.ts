@@ -1,20 +1,18 @@
-export type Manifest = {
+export interface Manifest {
   version: number
-  root: 'projects'
-  projects: Array<{
-    id: string
-    label: string
-    folder: string
-    models: Array<{
-      id: string
-      label: string
-      file: string
-    }>
-  }>
+  root: string
+  projects: Project[]
 }
 
-export type ModelRef = {
-  projectId: string
-  modelId: string
+export interface Project {
+  id: string
+  label: string
+  folder: string
+  models: Model[]
 }
 
+export interface Model {
+  id: string
+  label: string
+  file: string
+}
