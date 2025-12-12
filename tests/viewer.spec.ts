@@ -4,19 +4,19 @@ test.describe('Model Benchmark Viewer', () => {
   test('should display all projects in the navigation', async ({ page }) => {
     await page.goto('/');
     
-    // Check that the Traffic Simulator project is visible
-    await expect(page.getByText('Traffic Simulator')).toBeVisible();
+    // Check that the Traffic Simulator project is visible in the sidebar navigation
+    await expect(page.locator('aside').getByText('Traffic Simulator')).toBeVisible();
     
     // Check that the project count badge shows 1 project
-    await expect(page.locator('text=1').first()).toBeVisible();
+    await expect(page.locator('aside').getByText('1')).toBeVisible();
   });
 
   test('should display all models for each project', async ({ page }) => {
     await page.goto('/');
     
     // Check that both models are visible in the navigation
-    await expect(page.getByText('Reference Build')).toBeVisible();
-    await expect(page.getByText('Custom Implementation')).toBeVisible();
+    await expect(page.locator('aside').getByRole('button', { name: /Reference Build/ })).toBeVisible();
+    await expect(page.locator('aside').getByRole('button', { name: /Custom Implementation/ })).toBeVisible();
   });
 
   test('should show correct model count in header', async ({ page }) => {
@@ -59,11 +59,11 @@ test.describe('Model Benchmark Viewer', () => {
   test('should switch to custom model when clicked', async ({ page }) => {
     await page.goto('/');
     
-    // Click on the Custom Implementation model
-    await page.getByText('Custom Implementation').click();
+    // Click on the Custom Implementation model in the sidebar
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     // Wait for the model name to update in the header
-    await expect(page.getByText('Custom Implementation').nth(1)).toBeVisible();
+    await expect(page.locator('main').getByText('Custom Implementation').first()).toBeVisible();
     
     // Check the path badge updates
     await expect(page.getByText('/projects/traffic-simulator/custom/index.html')).toBeVisible();
@@ -73,14 +73,14 @@ test.describe('Model Benchmark Viewer', () => {
     await page.goto('/');
     
     // Initially, Reference Build should be highlighted
-    const referenceButton = page.locator('button', { hasText: 'Reference Build' }).first();
+    const referenceButton = page.locator('aside').getByRole('button', { name: /Reference Build/ });
     await expect(referenceButton).toHaveClass(/bg-indigo-500/);
     
     // Click on Custom Implementation
-    await page.getByText('Custom Implementation').click();
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     // Custom Implementation should now be highlighted
-    const customButton = page.locator('button', { hasText: 'Custom Implementation' }).first();
+    const customButton = page.locator('aside').getByRole('button', { name: /Custom Implementation/ });
     await expect(customButton).toHaveClass(/bg-indigo-500/);
   });
 
@@ -154,8 +154,8 @@ test.describe('Traffic Simulator - Custom Model', () => {
   test('should load custom simulator successfully', async ({ page }) => {
     await page.goto('/');
     
-    // Switch to custom model
-    await page.getByText('Custom Implementation').click();
+    // Switch to custom model in sidebar
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     const iframe = page.frameLocator('iframe[title="Project output"]');
     
@@ -171,8 +171,8 @@ test.describe('Traffic Simulator - Custom Model', () => {
   test('should display stats panel with car count, queue, and time', async ({ page }) => {
     await page.goto('/');
     
-    // Switch to custom model
-    await page.getByText('Custom Implementation').click();
+    // Switch to custom model in sidebar
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     const iframe = page.frameLocator('iframe[title="Project output"]');
     
@@ -185,8 +185,8 @@ test.describe('Traffic Simulator - Custom Model', () => {
   test('should update stats over time', async ({ page }) => {
     await page.goto('/');
     
-    // Switch to custom model
-    await page.getByText('Custom Implementation').click();
+    // Switch to custom model in sidebar
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     const iframe = page.frameLocator('iframe[title="Project output"]');
     
@@ -211,8 +211,8 @@ test.describe('Traffic Simulator - Custom Model', () => {
   test('should have active traffic light indicator', async ({ page }) => {
     await page.goto('/');
     
-    // Switch to custom model
-    await page.getByText('Custom Implementation').click();
+    // Switch to custom model in sidebar
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     const iframe = page.frameLocator('iframe[title="Project output"]');
     
@@ -228,8 +228,8 @@ test.describe('Traffic Simulator - Custom Model', () => {
   test('should render canvas with correct dimensions', async ({ page }) => {
     await page.goto('/');
     
-    // Switch to custom model
-    await page.getByText('Custom Implementation').click();
+    // Switch to custom model in sidebar
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     const iframe = page.frameLocator('iframe[title="Project output"]');
     const canvas = iframe.locator('canvas#sim');
@@ -242,8 +242,8 @@ test.describe('Traffic Simulator - Custom Model', () => {
   test('should have gradient animated border effect', async ({ page }) => {
     await page.goto('/');
     
-    // Switch to custom model
-    await page.getByText('Custom Implementation').click();
+    // Switch to custom model in sidebar
+    await page.locator('aside').getByRole('button', { name: /Custom Implementation/ }).click();
     
     const iframe = page.frameLocator('iframe[title="Project output"]');
     
