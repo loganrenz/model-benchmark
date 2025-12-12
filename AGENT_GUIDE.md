@@ -19,7 +19,7 @@ model-benchmark/
 
 1. Create a folder at `public/projects/<project>/<model>/`.
 2. Drop in an `index.html` containing the model’s output (include any CSS/JS inline or as sibling files).
-3. Add a matching project entry in `data/projects.ts` with a `path` that points to the new HTML.
+3. Add a matching project entry in `data/projects.ts` with a `path` that points to the new HTML. **The sidebar only renders projects that are registered here.**
 
 ## Development
 

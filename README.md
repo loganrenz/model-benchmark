@@ -23,7 +23,7 @@ Open [http://localhost:3000](http://localhost:3000) to browse projects.
 
 1. Create a folder at `public/projects/<project-slug>/<model-name>/`.
 2. Add an `index.html` containing the model output (self-contained works best).
-3. Extend `data/projects.ts` with metadata for the project, its instructions, and tasks.
+3. Register the project in `data/projects.ts` with its models and paths — **the left-hand file viewer only shows entries that appear in this file**.
 4. Restart the dev server to pick up the new entry.
 
 ## Current projects

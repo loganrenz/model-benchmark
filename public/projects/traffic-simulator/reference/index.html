@@ -13,155 +13,97 @@
       }
       body {
         margin: 0;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         background: radial-gradient(circle at 20% 20%, #0d1b2a, #05070c 50%),
           radial-gradient(circle at 80% 0%, #111827, #05070c 48%);
-        color: #e5e7eb;
-      }
-      header {
-        padding: 16px 20px 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 16px;
-      }
-      h1 {
-        margin: 0;
-        font-size: 18px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #a5b4fc;
-      }
-      p.subhead {
-        margin: 2px 0 0;
-        color: #94a3b8;
-        font-size: 14px;
       }
       .wrap {
         width: min(1080px, 96vw);
-        margin: 0 auto 24px;
-        background: #0b1220c9;
+        margin: 32px auto;
+        background: #070d18dd;
         border: 1px solid #1f2937;
-        border-radius: 16px;
+        border-radius: 18px;
         box-shadow: 0 30px 90px #020617;
-        backdrop-filter: blur(6px);
+        backdrop-filter: blur(8px);
+        position: relative;
+        overflow: hidden;
       }
-      .simulator {
-        padding: 0 20px 20px;
+      .glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120px at 12% 18%, rgba(99, 102, 241, 0.14), transparent 50%),
+          radial-gradient(140px at 86% 18%, rgba(34, 197, 94, 0.12), transparent 52%),
+          radial-gradient(180px at 50% 0%, rgba(34, 211, 238, 0.12), transparent 60%);
+        pointer-events: none;
       }
-      .hud {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 12px;
-        padding: 0 20px 16px;
+      .frame {
+        position: relative;
+        padding: 14px 16px 18px;
       }
-      .pill {
-        background: linear-gradient(135deg, #0f172a, #0b1220);
-        border: 1px solid #1f2937;
-        border-radius: 12px;
-        padding: 10px 12px;
+      .status {
+        position: absolute;
+        top: 12px;
+        right: 14px;
         display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(59, 130, 246, 0.18);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
-      .pill strong {
-        display: block;
-        font-size: 13px;
-        color: #c7d2fe;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
+      .status .lamp {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: #334155;
+        box-shadow: 0 0 12px rgba(51, 65, 85, 0.5);
+        border: 1px solid #0f172a;
       }
-      .pill span {
-        font-size: 12px;
-        color: #cbd5e1;
+      .status .lamp.on.green {
+        background: #22c55e;
+        box-shadow: 0 0 18px rgba(34, 197, 94, 0.8);
       }
-      .legend {
-        padding: 0 20px 18px;
-        color: #94a3b8;
-        font-size: 13px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
+      .status .lamp.on.yellow {
+        background: #eab308;
+        box-shadow: 0 0 18px rgba(234, 179, 8, 0.8);
       }
-      .dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        display: inline-block;
+      .status .lamp.on.red {
+        background: #ef4444;
+        box-shadow: 0 0 18px rgba(239, 68, 68, 0.8);
       }
       canvas {
         width: 100%;
-        height: 340px;
+        height: 360px;
         display: block;
-        background: radial-gradient(circle at 50% 50%, #0f172a, #0b1220 70%);
-        border-radius: 14px;
+        background: radial-gradient(circle at 50% 50%, #0f172a, #0b1220 72%);
+        border-radius: 16px;
         border: 1px solid #1f2937;
         box-shadow: inset 0 20px 60px rgba(0, 0, 0, 0.45);
       }
-      .note {
-        padding: 0 20px 18px;
-        margin: 0;
-        color: #cbd5e1;
-        font-size: 13px;
-        line-height: 1.6;
+      @media (max-width: 600px) {
+        .wrap {
+          margin: 16px auto;
+        }
+        .frame {
+          padding: 12px 12px 16px;
+        }
+        canvas {
+          height: 300px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <header>
-        <div>
-          <h1>Traffic Simulator</h1>
-          <p class="subhead">Left-to-right two-lane flow governed by a shared stoplight</p>
+      <div class="glow"></div>
+      <div class="frame">
+        <div class="status" aria-hidden="true">
+          <span class="lamp" id="lamp-green"></span>
+          <span class="lamp" id="lamp-yellow"></span>
+          <span class="lamp" id="lamp-red"></span>
         </div>
-        <div class="pill" style="border-color: #22d3ee; color: #e0f2fe">
-          <div class="dot" style="background: radial-gradient(circle at 30% 30%, #7dd3fc, #0369a1)"></div>
-          <div>
-            <strong>Reference build</strong>
-            <span>Self contained & collision free</span>
-          </div>
-        </div>
-      </header>
-      <div class="hud">
-        <div class="pill">
-          <div class="dot" id="phase-dot"></div>
-          <div>
-            <strong>Light</strong>
-            <span id="phase-label">-</span>
-          </div>
-        </div>
-        <div class="pill">
-          <div class="dot" style="background: linear-gradient(135deg, #22c55e, #14532d)"></div>
-          <div>
-            <strong>Flow</strong>
-            <span id="flow-label">-</span>
-          </div>
-        </div>
-        <div class="pill">
-          <div class="dot" style="background: linear-gradient(135deg, #818cf8, #3730a3)"></div>
-          <div>
-            <strong>Queue</strong>
-            <span id="queue-label">-</span>
-          </div>
-        </div>
+        <canvas id="sim" width="1060" height="360"></canvas>
       </div>
-      <div class="simulator">
-        <canvas id="sim" width="1060" height="340"></canvas>
-      </div>
-      <div class="legend">
-        <span class="dot" style="background: linear-gradient(135deg, #22c55e, #14532d)"></span>
-        <span>Green = free flow</span>
-        <span class="dot" style="background: linear-gradient(135deg, #eab308, #854d0e)"></span>
-        <span>Yellow = cautious braking</span>
-        <span class="dot" style="background: linear-gradient(135deg, #ef4444, #7f1d1d)"></span>
-        <span>Red = enforced stop line</span>
-      </div>
-      <p class="note">
-        Cars spawn at varied intervals, anticipate the signal, leave room for the vehicle ahead, and accelerate smoothly when
-        the light allows. Everything is bundled in this single file for easy drop-in testing.
-      </p>
     </div>
 
     <script>
@@ -353,15 +295,17 @@
         });
       }
 
-      function drawOverlays(queueCounts) {
-        const flow = Math.max(0, Math.min(1, light.timer / light.phase.duration));
-        const flowText = light.phase.name === 'green' ? 'Open' : light.phase.name === 'yellow' ? 'Caution' : 'Stopped';
-        document.getElementById('phase-label').textContent = `${light.phase.name.toUpperCase()} • ${(light.phase.duration - light.timer).toFixed(1)}s`;
-        document.getElementById('flow-label').textContent = `${flowText} • ${(cars.length / 2).toFixed(0)} cars per lane`; // rough flow est
-        document.getElementById('queue-label').textContent = `${queueCounts[lanes[0]] + queueCounts[lanes[1]]} waiting`;
-        const dot = document.getElementById('phase-dot');
-        dot.style.background = light.phase.color;
-        dot.style.boxShadow = `0 0 12px ${light.phase.color}`;
+      function drawOverlays() {
+        const lamps = {
+          green: document.getElementById('lamp-green'),
+          yellow: document.getElementById('lamp-yellow'),
+          red: document.getElementById('lamp-red')
+        };
+        Object.values(lamps).forEach((lamp) => lamp.classList.remove('on', 'green', 'yellow', 'red'));
+        const active = lamps[light.phase.name];
+        if (active) {
+          active.classList.add('on', light.phase.name);
+        }
       }
 
       function draw(queues) {
@@ -369,7 +313,7 @@
         drawRoad();
         drawLight();
         drawCars();
-        drawOverlays(queues);
+        drawOverlays();
       }
 
       if (!ctx.roundRect) {
