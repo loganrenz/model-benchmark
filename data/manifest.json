@@ -1,0 +1,40 @@
+{
+  "projects": [
+    {
+      "id": "traffic-stoplight",
+      "title": "Traffic Stoplight / Traffic Flow Simulator",
+      "prompt": "Build a standalone HTML/CSS/JS simulation of a 4-way intersection with a stoplight cycle (timed phases with yellow transition), cars that spawn and queue in lanes, cars move through obeying the light, basic collision avoidance (no overlap), controls (start/pause/reset, spawn rate slider, cycle duration slider), and simple metrics (cars passed, average wait time). Use DOM elements or SVG (no canvas requirement). Must run in an iframe and standalone.",
+      "implementations": [
+        {
+          "modelId": "gpt-5-1-codex-max",
+          "title": "Baseline Implementation",
+          "path": "public/projects/traffic-stoplight/gpt-5-1-codex-max/index.html"
+        }
+      ]
+    },
+    {
+      "id": "offline-queue",
+      "title": "Offline-First Task Queue (IndexedDB)",
+      "prompt": "Build a standalone HTML/CSS/JS offline-first task app persisted in IndexedDB: create tasks (title, priority, createdAt), toggle Online/Offline, when offline queue actions (add/edit/delete) as pending ops, when online replay queued ops in order, show queue length, last sync time, and an event log. Include export/import JSON buttons. Must run in an iframe and standalone.",
+      "implementations": [
+        {
+          "modelId": "gpt-5-1-codex-max",
+          "title": "Baseline Implementation",
+          "path": "public/projects/offline-queue/gpt-5-1-codex-max/index.html"
+        }
+      ]
+    },
+    {
+      "id": "realtime-leaderboard",
+      "title": "Real-Time Leaderboard (Event Stream Simulation)",
+      "prompt": "Build a standalone HTML/CSS/JS leaderboard dashboard that simulates a stream of score events for ~20 players using setInterval, maintains rolling stats (total score, last event time, rank change indicator), controls (start/pause/reset, event rate slider, inject spike button), visual table leaderboard and a small sparkline per player (SVG ok). Include a seedable RNG so the same seed produces the same stream. Must run in an iframe and standalone.",
+      "implementations": [
+        {
+          "modelId": "gpt-5-1-codex-max",
+          "title": "Baseline Implementation",
+          "path": "public/projects/realtime-leaderboard/gpt-5-1-codex-max/index.html"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traffic Stoplight Simulator</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --road: #1f2937;
+      --line: #9ca3af;
+      --panel: #111827;
+      --text: #e5e7eb;
+      --accent: #22d3ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.08), transparent 35%), var(--bg);
+      color: var(--text);
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+    }
+    aside { padding: 16px; background: var(--panel); border-right: 1px solid #182233; }
+    main { padding: 16px; }
+    h1 { margin-top: 0; }
+    .controls { display: grid; gap: 12px; }
+    label { font-size: 14px; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center; }
+    input[type="range"] { width: 150px; }
+    button { background: var(--accent); color: #0b1220; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+    button.secondary { background: #1f2937; color: var(--text); border: 1px solid #334155; }
+    .board { position: relative; width: 100%; max-width: 820px; aspect-ratio: 1 / 1; margin: 0 auto; background: var(--bg); }
+    .road { position: absolute; background: var(--road); }
+    .road.vert { left: 50%; top: 0; width: 140px; height: 100%; transform: translateX(-50%); }
+    .road.hor { top: 50%; left: 0; width: 100%; height: 140px; transform: translateY(-50%); }
+    .lane-line { position: absolute; background: var(--line); opacity: 0.35; }
+    .lane-line.vert { width: 2px; height: 100%; }
+    .lane-line.hor { height: 2px; width: 100%; }
+    .intersection { position: absolute; width: 140px; height: 140px; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px dashed rgba(255,255,255,0.15); }
+    .light { position: absolute; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #111827; box-shadow: 0 0 8px rgba(0,0,0,0.4); }
+    .light.ns { top: 40%; left: 50%; transform: translate(-50%, -100%); }
+    .light.ew { top: 60%; left: 50%; transform: translate(-50%, 0); }
+    .light.red { background: #f87171; }
+    .light.green { background: #4ade80; }
+    .light.yellow { background: #fbbf24; }
+    .car { position: absolute; width: 16px; height: 28px; border-radius: 4px; background: #22d3ee; box-shadow: 0 3px 8px rgba(0,0,0,0.4); transition: transform 0.1s linear; }
+    .car.west, .car.east { width: 28px; height: 16px; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-top: 12px; }
+    .metric { background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid #1f2937; }
+    .metric strong { display: block; color: #94a3b8; font-size: 13px; }
+    .metric span { font-size: 20px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Traffic Stoplight</h1>
+    <p>Four-way intersection with timed lights, moving cars, and simple metrics.</p>
+    <div class="controls">
+      <div>
+        <label>Spawn rate <span id="spawnLabel">1.5s</span></label>
+        <input id="spawnRate" type="range" min="0.5" max="3" step="0.1" value="1.5" />
+      </div>
+      <div>
+        <label>Cycle duration <span id="cycleLabel">7s</span></label>
+        <input id="cycle" type="range" min="4" max="10" step="0.5" value="7" />
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap: wrap;">
+        <button id="start">Start</button>
+        <button id="pause" class="secondary">Pause</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><strong>Cars Passed</strong><span id="carsPassed">0</span></div>
+      <div class="metric"><strong>Active Cars</strong><span id="activeCars">0</span></div>
+      <div class="metric"><strong>Avg Wait</strong><span id="avgWait">0.0s</span></div>
+    </div>
+  </aside>
+  <main>
+    <div class="board" id="board">
+      <div class="road vert"></div>
+      <div class="road hor"></div>
+      <div class="lane-line vert" style="left: calc(50% - 35px);"></div>
+      <div class="lane-line vert" style="left: calc(50% + 35px);"></div>
+      <div class="lane-line hor" style="top: calc(50% - 35px);"></div>
+      <div class="lane-line hor" style="top: calc(50% + 35px);"></div>
+      <div class="intersection"></div>
+      <div class="light ns" id="lightNS"></div>
+      <div class="light ew" id="lightEW"></div>
+    </div>
+  </main>
+  <script>
+    const board = document.getElementById('board');
+    const lightNS = document.getElementById('lightNS');
+    const lightEW = document.getElementById('lightEW');
+    const spawnInput = document.getElementById('spawnRate');
+    const cycleInput = document.getElementById('cycle');
+    const spawnLabel = document.getElementById('spawnLabel');
+    const cycleLabel = document.getElementById('cycleLabel');
+    const carsPassedEl = document.getElementById('carsPassed');
+    const activeCarsEl = document.getElementById('activeCars');
+    const avgWaitEl = document.getElementById('avgWait');
+
+    const lanes = ['north', 'south', 'east', 'west'];
+    const laneData = {
+      north: { dir: 'south', pos: { x: '50%', y: -40 }, axis: 'y', sign: 1 },
+      south: { dir: 'north', pos: { x: '50%', y: board.clientHeight + 40 }, axis: 'y', sign: -1 },
+      east: { dir: 'west', pos: { x: board.clientWidth + 40, y: '50%' }, axis: 'x', sign: -1 },
+      west: { dir: 'east', pos: { x: -40, y: '50%' }, axis: 'x', sign: 1 },
+    };
+
+    let cars = [];
+    let running = false;
+    let lightTimer = null;
+    let spawnTimer = null;
+    let lightState = 'ns';
+    let phaseStart = Date.now();
+    let carsPassed = 0;
+    let totalWait = 0;
+
+    function updateLabels() {
+      spawnLabel.textContent = `${parseFloat(spawnInput.value).toFixed(1)}s`;
+      cycleLabel.textContent = `${parseFloat(cycleInput.value).toFixed(1)}s`;
+    }
+
+    function setLights(nsColor, ewColor) {
+      lightNS.className = `light ns ${nsColor}`;
+      lightEW.className = `light ew ${ewColor}`;
+    }
+
+    function scheduleLights() {
+      clearInterval(lightTimer);
+      const base = parseFloat(cycleInput.value) * 1000;
+      lightTimer = setInterval(() => {
+        const elapsed = Date.now() - phaseStart;
+        const phase = elapsed % base;
+        const third = base / 3;
+        if (phase < third * 2) {
+          lightState = 'ns';
+          setLights('green', 'red');
+        } else if (phase < third * 2.5) {
+          lightState = 'ns-yellow';
+          setLights('yellow', 'red');
+        } else {
+          lightState = 'ew';
+          setLights('red', 'green');
+        }
+      }, 120);
+    }
+
+    function spawnCar() {
+      const lane = lanes[Math.floor(Math.random() * lanes.length)];
+      const car = document.createElement('div');
+      car.className = `car ${lane === 'east' || lane === 'west' ? lane : lane}`;
+      const data = laneData[lane];
+      car.style.left = typeof data.pos.x === 'string' ? data.pos.x : `${data.pos.x}px`;
+      car.style.top = typeof data.pos.y === 'string' ? data.pos.y : `${data.pos.y}px`;
+      car.dataset.lane = lane;
+      car.dataset.spawn = Date.now();
+      board.appendChild(car);
+      cars.push({ el: car, lane, progress: 0 });
+      activeCarsEl.textContent = cars.length;
+    }
+
+    function scheduleSpawns() {
+      clearInterval(spawnTimer);
+      spawnTimer = setInterval(spawnCar, parseFloat(spawnInput.value) * 1000);
+    }
+
+    function moveCars() {
+      cars.forEach((car, idx) => {
+        const info = laneData[car.lane];
+        const nearIntersection = Math.abs(car.progress) > 60;
+        const green =
+          (lightState.startsWith('ns') && (car.lane === 'north' || car.lane === 'south')) ||
+          (lightState === 'ew' && (car.lane === 'east' || car.lane === 'west'));
+        const canMove = nearIntersection ? green : true;
+
+        const speed = canMove ? 1.8 : 0.2;
+        car.progress += speed * info.sign;
+
+        if (info.axis === 'y') {
+          const base = car.lane === 'north' ? -40 : board.clientHeight + 40;
+          const pos = base + car.progress;
+          car.el.style.top = `${pos}px`;
+          car.el.style.left = '50%';
+          car.el.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+          if (car.lane === 'south') car.el.style.transform = 'translate(-50%, -50%) rotate(180deg)';
+          if ((info.sign > 0 && pos > board.clientHeight + 60) || (info.sign < 0 && pos < -60)) {
+            finishCar(idx);
+          }
+        } else {
+          const base = car.lane === 'west' ? -40 : board.clientWidth + 40;
+          const pos = base + car.progress;
+          car.el.style.left = `${pos}px`;
+          car.el.style.top = '50%';
+          car.el.style.transform = 'translate(-50%, -50%) rotate(90deg)';
+          if (car.lane === 'west') car.el.style.transform = 'translate(-50%, -50%) rotate(-90deg)';
+          if ((info.sign > 0 && pos > board.clientWidth + 60) || (info.sign < 0 && pos < -60)) {
+            finishCar(idx);
+          }
+        }
+      });
+    }
+
+    function finishCar(idx) {
+      const [car] = cars.splice(idx, 1);
+      if (car) {
+        const wait = (Date.now() - parseInt(car.el.dataset.spawn, 10)) / 1000;
+        totalWait += wait;
+        carsPassed += 1;
+        car.el.remove();
+        carsPassedEl.textContent = carsPassed;
+        activeCarsEl.textContent = cars.length;
+        avgWaitEl.textContent = `${(totalWait / carsPassed).toFixed(1)}s`;
+      }
+    }
+
+    let tickHandle = null;
+    function startLoop() {
+      if (running) return;
+      running = true;
+      phaseStart = Date.now();
+      scheduleLights();
+      scheduleSpawns();
+      tickHandle = setInterval(moveCars, 60);
+    }
+
+    function pauseLoop() {
+      running = false;
+      clearInterval(lightTimer);
+      clearInterval(spawnTimer);
+      clearInterval(tickHandle);
+    }
+
+    function resetLoop() {
+      pauseLoop();
+      cars.forEach((c) => c.el.remove());
+      cars = [];
+      carsPassed = 0;
+      totalWait = 0;
+      activeCarsEl.textContent = '0';
+      carsPassedEl.textContent = '0';
+      avgWaitEl.textContent = '0.0s';
+      setLights('green', 'red');
+    }
+
+    spawnInput.addEventListener('input', () => { updateLabels(); if (running) scheduleSpawns(); });
+    cycleInput.addEventListener('input', () => { updateLabels(); if (running) scheduleLights(); });
+    document.getElementById('start').addEventListener('click', startLoop);
+    document.getElementById('pause').addEventListener('click', pauseLoop);
+    document.getElementById('reset').addEventListener('click', resetLoop);
+
+    updateLabels();
+    setLights('green', 'red');
+  </script>
+</body>
+</html>
