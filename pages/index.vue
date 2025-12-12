@@ -1,106 +1,119 @@
 <script setup lang="ts">
 import type { Manifest } from '~/types/manifest'
 
-defineOptions({ name: 'ProjectViewerPage' })
-
 const route = useRoute()
 const router = useRouter()
 
-// Load from public/ as the single source of truth.
-// Client-only avoids SSR/runtime differences on Vercel that can lead to blank screens.
-const { data: manifest, error } = useFetch<Manifest>('/data/manifest.json', { server: false })
+// Fetch manifest client-only to avoid SSR issues
+const { data: manifest, error } = await useFetch<Manifest>('/data/manifest.json', { 
+  server: false 
+})
 
 const drawerOpen = ref(false)
 
-type Active = { key: string; src: string; label: string }
-const active = ref<Active | null>(null)
-
-function setActive(next: Active) {
-  active.value = next
-  router.replace({ query: { ...route.query, model: next.key } }).catch(() => {})
+interface ActiveModel {
+  key: string
+  src: string
+  label: string
 }
 
-watch(
-  manifest,
-  (m) => {
-    if (!m) return
-    const q = typeof route.query.model === 'string' ? route.query.model : null
+const active = ref<ActiveModel | null>(null)
 
-    // Try to restore from query, else default to first available model.
-    let found: Active | null = null
-    for (const p of m.projects) {
-      for (const mod of p.models) {
-        const key = `model:${p.id}/${mod.id}`
-        if (q && q === key) {
-          found = { key, src: `/projects/${p.folder}/${mod.file}`, label: mod.label }
+function selectModel(model: ActiveModel) {
+  active.value = model
+  router.replace({ query: { model: model.key } })
+  drawerOpen.value = false
+}
+
+// Initialize active model from query or default to first
+watchEffect(() => {
+  if (!manifest.value) return
+  
+  const queryModel = route.query.model as string | undefined
+  let found: ActiveModel | null = null
+
+  // Try to find model from query
+  if (queryModel) {
+    for (const project of manifest.value.projects) {
+      for (const model of project.models) {
+        const key = `${project.id}/${model.id}`
+        if (key === queryModel) {
+          found = {
+            key,
+            src: `/projects/${project.folder}/${model.file}`,
+            label: model.label
+          }
           break
         }
       }
       if (found) break
     }
+  }
 
-    if (!found) {
-      const p0 = m.projects[0]
-      const m0 = p0?.models?.[0]
-      if (p0 && m0) {
-        found = { key: `model:${p0.id}/${m0.id}`, src: `/projects/${p0.folder}/${m0.file}`, label: m0.label }
+  // Default to first model
+  if (!found && manifest.value.projects.length > 0) {
+    const project = manifest.value.projects[0]
+    const model = project.models[0]
+    if (project && model) {
+      found = {
+        key: `${project.id}/${model.id}`,
+        src: `/projects/${project.folder}/${model.file}`,
+        label: model.label
       }
     }
+  }
 
-    if (found) active.value = found
-  },
-  { immediate: true }
-)
+  if (found && active.value?.key !== found.key) {
+    active.value = found
+  }
+})
 </script>
 
 <template>
-  <div class="h-dvh w-full bg-white text-gray-900">
-    <main class="h-full w-full overflow-hidden">
-      <div v-if="error" class="mx-auto max-w-xl p-6">
-        <UAlert color="red" variant="soft" title="Failed to load manifest">
-          <template #description>
-            <p class="text-sm text-gray-700">
-              Ensure <code class="rounded bg-gray-100 px-1.5 py-0.5">public/data/manifest.json</code> exists and is valid JSON.
-            </p>
-          </template>
-        </UAlert>
+  <div class="h-screen w-full bg-white">
+    <!-- Error State -->
+    <div v-if="error" class="flex h-full items-center justify-center p-6">
+      <div class="max-w-md rounded-lg border border-red-200 bg-red-50 p-6">
+        <h2 class="text-lg font-semibold text-red-900">Failed to load manifest</h2>
+        <p class="mt-2 text-sm text-red-700">
+          Ensure <code class="rounded bg-red-100 px-1.5 py-0.5">public/data/manifest.json</code> exists.
+        </p>
       </div>
+    </div>
 
-      <div v-else-if="!manifest" class="mx-auto flex h-full max-w-md items-center justify-center p-6">
-        <p class="text-sm text-gray-600">Loading…</p>
-      </div>
+    <!-- Loading State -->
+    <div v-else-if="!manifest" class="flex h-full items-center justify-center">
+      <p class="text-gray-600">Loading...</p>
+    </div>
 
-      <div v-else-if="!active" class="mx-auto flex h-full max-w-md items-center justify-center p-6">
-        <div class="text-center">
-          <p class="text-sm text-gray-600">No model selected.</p>
+    <!-- Main Content -->
+    <div v-else class="flex h-full flex-col">
+      <!-- Iframe Viewer -->
+      <div class="flex-1">
+        <iframe
+          v-if="active"
+          :key="active.src"
+          :src="active.src"
+          :title="active.label"
+          class="h-full w-full border-0"
+        />
+        <div v-else class="flex h-full items-center justify-center">
           <button
-            type="button"
-            class="mt-3 inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 shadow-sm hover:bg-gray-50"
+            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
             @click="drawerOpen = true"
           >
-            Open Project Explorer
+            Select a Model
           </button>
         </div>
       </div>
 
-      <div v-else class="h-full w-full">
-        <iframe
-          :key="active.src"
-          :src="active.src"
-          class="h-full w-full border-0 bg-white"
-          :title="active.label"
-          loading="eager"
-        />
-      </div>
-    </main>
-
-    <ProjectExplorerDrawer
-      v-if="manifest"
-      v-model:open="drawerOpen"
-      :manifest="manifest"
-      :active-key="active?.key"
-      @select="setActive"
-    />
+      <!-- Bottom Drawer -->
+      <ProjectExplorerDrawer
+        v-model:open="drawerOpen"
+        :manifest="manifest"
+        :active-key="active?.key"
+        @select="selectModel"
+      />
+    </div>
   </div>
 </template>
-
