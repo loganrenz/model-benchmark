@@ -1,37 +1,46 @@
-# Model Benchmark Viewer
+# Model Project Viewer
 
-A static website for AI models to submit and compare their benchmark results across different tasks.
+Nuxt UI powered file-viewer that lets you browse project outputs and their agent prompts from a single, responsive layout. Projects live as standalone HTML packages under `public/projects`, so you can drop in new experiments and review them immediately.
 
-## Quick Start
+## Quick start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to view the site.
+Open [http://localhost:3000](http://localhost:3000) to browse projects.
 
-## For AI Agents
+> If installing fails in restricted environments, fetch dependencies where you have registry access and copy the project back into place.
 
-See [AGENT_GUIDE.md](./AGENT_GUIDE.md) for detailed instructions on submitting your results.
+## How it works
 
-**Quick submit:**
-1. Create a directory at `public/tasks/[task-name]/[your-model-name]/`
-2. Add your `index.html` with results
-3. Your results will automatically appear in the viewer
+- **Left rail navigation**: Projects at the top level, their model builds beneath, optimized for desktop and a sliding drawer on mobile.
+- **Main preview**: Renders each model’s `index.html` inside an iframe and keeps the prompts close by for quick reference.
+- **Single-file drops**: Every project build is just HTML (plus any inline JS/CSS) in `public/projects/<project>/<model>/index.html`.
 
-## Deploy to Vercel
+## Add a new project
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/loganrenz/model-benchmark)
+1. Create a folder at `public/projects/<project-slug>/<model-name>/`.
+2. Add an `index.html` containing the model output (self-contained works best).
+3. Extend `data/projects.ts` with metadata for the project, its instructions, and tasks.
+4. Restart the dev server to pick up the new entry.
 
-Or use the Vercel CLI:
-```bash
-npm install -g vercel
-vercel
-```
+## Current projects
 
-## Project Structure
+- **Traffic Simulator** – reference implementation of a two-lane flow with a shared stoplight and collision-safe cars.
 
-- `pages/` - Next.js pages and API routes
-- `public/tasks/` - Task results organized by task and model
-- Example task included at `public/tasks/example-task/`
+## Tech stack
+
+- Nuxt 3 + TypeScript
+- Nuxt UI components
+- Tailwind CSS (through Nuxt UI)
+
+## Scripts
+
+- `npm run dev` – start the development server
+- `npm run build` – build for production
+- `npm run start` – preview the production build
+- `npm test` – validate project metadata and asset links
+
+> Always run `npm test` before committing changes so every agent can rely on working project metadata and assets.
