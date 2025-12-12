@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Traffic Simulator Reference</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 20% 20%, #0d1b2a, #05070c 50%),
+          radial-gradient(circle at 80% 0%, #111827, #05070c 48%);
+        color: #e5e7eb;
+      }
+      header {
+        padding: 16px 20px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #a5b4fc;
+      }
+      p.subhead {
+        margin: 2px 0 0;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      .wrap {
+        width: min(1080px, 96vw);
+        margin: 0 auto 24px;
+        background: #0b1220c9;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        box-shadow: 0 30px 90px #020617;
+        backdrop-filter: blur(6px);
+      }
+      .simulator {
+        padding: 0 20px 20px;
+      }
+      .hud {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        padding: 0 20px 16px;
+      }
+      .pill {
+        background: linear-gradient(135deg, #0f172a, #0b1220);
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .pill strong {
+        display: block;
+        font-size: 13px;
+        color: #c7d2fe;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .pill span {
+        font-size: 12px;
+        color: #cbd5e1;
+      }
+      .legend {
+        padding: 0 20px 18px;
+        color: #94a3b8;
+        font-size: 13px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      canvas {
+        width: 100%;
+        height: 340px;
+        display: block;
+        background: radial-gradient(circle at 50% 50%, #0f172a, #0b1220 70%);
+        border-radius: 14px;
+        border: 1px solid #1f2937;
+        box-shadow: inset 0 20px 60px rgba(0, 0, 0, 0.45);
+      }
+      .note {
+        padding: 0 20px 18px;
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>Traffic Simulator</h1>
+          <p class="subhead">Left-to-right two-lane flow governed by a shared stoplight</p>
+        </div>
+        <div class="pill" style="border-color: #22d3ee; color: #e0f2fe">
+          <div class="dot" style="background: radial-gradient(circle at 30% 30%, #7dd3fc, #0369a1)"></div>
+          <div>
+            <strong>Reference build</strong>
+            <span>Self contained & collision free</span>
+          </div>
+        </div>
+      </header>
+      <div class="hud">
+        <div class="pill">
+          <div class="dot" id="phase-dot"></div>
+          <div>
+            <strong>Light</strong>
+            <span id="phase-label">-</span>
+          </div>
+        </div>
+        <div class="pill">
+          <div class="dot" style="background: linear-gradient(135deg, #22c55e, #14532d)"></div>
+          <div>
+            <strong>Flow</strong>
+            <span id="flow-label">-</span>
+          </div>
+        </div>
+        <div class="pill">
+          <div class="dot" style="background: linear-gradient(135deg, #818cf8, #3730a3)"></div>
+          <div>
+            <strong>Queue</strong>
+            <span id="queue-label">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="simulator">
+        <canvas id="sim" width="1060" height="340"></canvas>
+      </div>
+      <div class="legend">
+        <span class="dot" style="background: linear-gradient(135deg, #22c55e, #14532d)"></span>
+        <span>Green = free flow</span>
+        <span class="dot" style="background: linear-gradient(135deg, #eab308, #854d0e)"></span>
+        <span>Yellow = cautious braking</span>
+        <span class="dot" style="background: linear-gradient(135deg, #ef4444, #7f1d1d)"></span>
+        <span>Red = enforced stop line</span>
+      </div>
+      <p class="note">
+        Cars spawn at varied intervals, anticipate the signal, leave room for the vehicle ahead, and accelerate smoothly when
+        the light allows. Everything is bundled in this single file for easy drop-in testing.
+      </p>
+    </div>
+
+    <script>
+      const canvas = document.getElementById('sim');
+      const ctx = canvas.getContext('2d');
+
+      const lanes = [140, 200];
+      const roadTop = 110;
+      const roadBottom = 230;
+      const stopLineX = 540;
+
+      const phases = [
+        { name: 'green', color: '#22c55e', duration: 7 },
+        { name: 'yellow', color: '#eab308', duration: 2 },
+        { name: 'red', color: '#ef4444', duration: 5 }
+      ];
+
+      const light = { phase: phases[0], index: 0, timer: 0 };
+      const cars = [];
+
+      const palette = ['#38bdf8', '#a78bfa', '#f472b6', '#22d3ee', '#f97316', '#c084fc'];
+
+      function easeOut(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      function spawnCar() {
+        const lane = lanes[Math.floor(Math.random() * lanes.length)];
+        const baseSpeed = 80 + Math.random() * 50;
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        cars.push({
+          x: -60 - Math.random() * 220,
+          y: lane,
+          width: 46,
+          height: 18,
+          speed: baseSpeed,
+          targetSpeed: baseSpeed,
+          color,
+          accel: 40 + Math.random() * 30,
+          id: crypto.randomUUID()
+        });
+      }
+
+      function cycleLight(delta) {
+        light.timer += delta;
+        if (light.timer >= light.phase.duration) {
+          light.index = (light.index + 1) % phases.length;
+          light.phase = phases[light.index];
+          light.timer = 0;
+        }
+      }
+
+      function updateCars(delta) {
+        const queueCounts = { [lanes[0]]: 0, [lanes[1]]: 0 };
+
+        cars.sort((a, b) => a.x - b.x);
+        cars.forEach((car, index) => {
+          const ahead = cars.find((c) => c.y === car.y && c.x > car.x);
+          const gapAhead = ahead ? ahead.x - (car.x + car.width) : Infinity;
+
+          const stoppingForLight =
+            (light.phase.name === 'red' && car.x + car.width >= stopLineX - 6) ||
+            (light.phase.name === 'yellow' && car.x + car.width >= stopLineX - 24);
+
+          let canMove = true;
+          let desiredSpeed = car.targetSpeed;
+
+          if (stoppingForLight) {
+            const distanceToLine = stopLineX - (car.x + car.width);
+            if (distanceToLine <= 0) {
+              canMove = false;
+              queueCounts[car.y] += 1;
+            } else {
+              desiredSpeed = Math.min(desiredSpeed, Math.max(0, distanceToLine * 1.3));
+            }
+          }
+
+          if (gapAhead < 18) {
+            canMove = false;
+          } else if (gapAhead < 60) {
+            desiredSpeed = Math.min(desiredSpeed, gapAhead * 1.2);
+          }
+
+          if (!canMove) {
+            car.speed = Math.max(0, car.speed - car.accel * delta * 1.6);
+          } else {
+            const speedDiff = desiredSpeed - car.speed;
+            car.speed += easeOut(Math.min(1, Math.abs(speedDiff) / car.accel)) * Math.sign(speedDiff) * delta * car.accel;
+            car.speed = Math.max(30, Math.min(car.speed, car.targetSpeed));
+          }
+
+          car.x += car.speed * delta;
+        });
+
+        for (let i = cars.length - 1; i >= 0; i--) {
+          if (cars[i].x - cars[i].width > canvas.width + 80) {
+            cars.splice(i, 1);
+          }
+        }
+
+        return queueCounts;
+      }
+
+      let spawnTimer = 0;
+      function update(delta) {
+        spawnTimer += delta;
+        if (spawnTimer > 1.1 + Math.random() * 0.8) {
+          spawnCar();
+          spawnTimer = 0;
+        }
+
+        cycleLight(delta);
+        const queues = updateCars(delta);
+        draw(queues);
+      }
+
+      function drawRoad() {
+        ctx.fillStyle = '#0b1220';
+        ctx.fillRect(0, roadTop, canvas.width, roadBottom - roadTop);
+
+        ctx.setLineDash([16, 12]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.beginPath();
+        ctx.moveTo(0, 170);
+        ctx.lineTo(canvas.width, 170);
+        ctx.moveTo(0, 210);
+        ctx.lineTo(canvas.width, 210);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = 'rgba(99,102,241,0.22)';
+        ctx.fillRect(stopLineX - 4, roadTop, 8, roadBottom - roadTop);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(stopLineX, roadTop);
+        ctx.lineTo(stopLineX, roadBottom);
+        ctx.stroke();
+      }
+
+      function drawLight() {
+        ctx.save();
+        ctx.translate(stopLineX + 26, roadTop - 16);
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(-8, 0, 16, roadBottom - roadTop + 40);
+
+        ctx.fillStyle = '#0b1220';
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(-16, 12, 32, 86, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        const lights = ['#ef4444', '#eab308', '#22c55e'];
+        ['red', 'yellow', 'green'].forEach((name, i) => {
+          const y = 28 + i * 28;
+          const isActive = light.phase.name === name;
+          ctx.fillStyle = isActive ? lights[i] : 'rgba(148,163,184,0.25)';
+          ctx.beginPath();
+          ctx.arc(0, y, 9, 0, Math.PI * 2);
+          ctx.fill();
+          if (isActive) {
+            const gradient = ctx.createRadialGradient(0, y, 2, 0, y, 16);
+            gradient.addColorStop(0, lights[i]);
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, y, 18, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        ctx.restore();
+      }
+
+      function drawCars() {
+        cars.forEach((car) => {
+          ctx.save();
+          ctx.translate(car.x, car.y);
+          ctx.fillStyle = car.color;
+          ctx.shadowColor = car.color + '70';
+          ctx.shadowBlur = 18;
+          ctx.fillRoundRect(0, -car.height / 2, car.width, car.height, 6);
+          ctx.fillStyle = 'rgba(15,23,42,0.6)';
+          ctx.fillRoundRect(6, -car.height / 2 + 2, car.width - 12, car.height - 6, 4);
+          ctx.restore();
+        });
+      }
+
+      function drawOverlays(queueCounts) {
+        const flow = Math.max(0, Math.min(1, light.timer / light.phase.duration));
+        const flowText = light.phase.name === 'green' ? 'Open' : light.phase.name === 'yellow' ? 'Caution' : 'Stopped';
+        document.getElementById('phase-label').textContent = `${light.phase.name.toUpperCase()} • ${(light.phase.duration - light.timer).toFixed(1)}s`;
+        document.getElementById('flow-label').textContent = `${flowText} • ${(cars.length / 2).toFixed(0)} cars per lane`; // rough flow est
+        document.getElementById('queue-label').textContent = `${queueCounts[lanes[0]] + queueCounts[lanes[1]]} waiting`;
+        const dot = document.getElementById('phase-dot');
+        dot.style.background = light.phase.color;
+        dot.style.boxShadow = `0 0 12px ${light.phase.color}`;
+      }
+
+      function draw(queues) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRoad();
+        drawLight();
+        drawCars();
+        drawOverlays(queues);
+      }
+
+      if (!ctx.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+          if (w < 2 * r) r = w / 2;
+          if (h < 2 * r) r = h / 2;
+          this.beginPath();
+          this.moveTo(x + r, y);
+          this.arcTo(x + w, y, x + w, y + h, r);
+          this.arcTo(x + w, y + h, x, y + h, r);
+          this.arcTo(x, y + h, x, y, r);
+          this.arcTo(x, y, x + w, y, r);
+          this.closePath();
+          return this;
+        };
+      }
+
+      CanvasRenderingContext2D.prototype.fillRoundRect = function (x, y, w, h, r) {
+        this.roundRect(x, y, w, h, r);
+        this.fill();
+      };
+
+      let last = performance.now();
+      function frame(now) {
+        const delta = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        update(delta);
+        requestAnimationFrame(frame);
+      }
+
+      spawnCar();
+      spawnCar();
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>
