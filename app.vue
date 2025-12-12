@@ -12,7 +12,7 @@
           </div>
         </div>
         <div class="flex items-center gap-2 sm:hidden">
-          <UButton color="gray" variant="ghost" icon="i-heroicons-bars-3" @click="isNavOpen = true">
+          <UButton color="gray" variant="ghost" icon="i-heroicons-bars-3" :onClick="() => { isNavOpen = true }">
             Browse projects
           </UButton>
         </div>
@@ -32,43 +32,39 @@
             </div>
           </template>
           <div class="scroll-area space-y-4 overflow-y-auto pr-1" style="max-height: calc(100vh - 9rem)">
-            <UAccordion :items="navigationLinks" variant="solid" color="indigo" class="divide-neutral-800">
-              <template #default="{ item, index, open }">
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  class="w-full justify-between text-left text-sm font-semibold"
-                  :aria-expanded="open"
-                  :aria-controls="`project-${index}`"
-                >
-                  <span class="flex items-center gap-2">
-                    <UIcon name="i-heroicons-folder" class="h-5 w-5 text-neutral-300" />
-                    {{ item.label }}
-                  </span>
-                  <UIcon :name="open ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="h-4 w-4" />
-                </UButton>
+            <UAccordion
+              :items="navigationLinks"
+              type="multiple"
+              :default-value="openProjectValues"
+              variant="solid"
+              color="indigo"
+              class="divide-neutral-800"
+            >
+              <template #leading>
+                <UIcon name="i-heroicons-folder" class="h-5 w-5 text-neutral-300" />
               </template>
-              <template #item="{ item }">
+              <template #default="{ item }">
+                {{ item.label }}
+              </template>
+              <template #trailing="{ open }">
+                <UIcon :name="open ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="h-4 w-4" />
+              </template>
+              <template #project-body="{ item }">
                 <div class="space-y-2 pt-2">
-                  <p class="px-2 text-xs text-neutral-400">{{ item.description }}</p>
                   <div class="space-y-1">
-                    <UButton
+                    <a
                       v-for="model in item.children"
                       :key="model.value"
-                      color="gray"
-                      variant="ghost"
-                      class="w-full justify-start gap-2 text-left"
+                      role="button"
+                      :href="`/?project=${encodeURIComponent(model.meta.projectSlug)}&model=${encodeURIComponent(model.meta.modelId)}`"
+                      class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-800/60"
                       :class="{
-                        'bg-indigo-500/10 text-indigo-200 ring-1 ring-indigo-500/30': selectedModel?.id === model.meta.id
+                        'bg-indigo-500/10 text-indigo-200 ring-1 ring-indigo-500/30': selectedModel?.id === model.meta.modelId
                       }"
-                      @click="selectProjectModel(model.meta.project, model.meta.model)"
                     >
                       <UIcon name="i-heroicons-cube-transparent" class="h-4 w-4" />
-                      <div class="flex flex-col">
-                        <span class="text-sm font-semibold">{{ model.label }}</span>
-                        <span class="text-xs text-neutral-400">{{ model.description }}</span>
-                      </div>
-                    </UButton>
+                      <span class="text-sm font-semibold">{{ model.label }}</span>
+                    </a>
                   </div>
                 </div>
               </template>
@@ -84,46 +80,42 @@
               <UIcon name="i-heroicons-folder-open" class="h-5 w-5" />
               Projects
             </div>
-            <UButton icon="i-heroicons-x-mark" color="gray" variant="ghost" @click="isNavOpen = false" />
+            <UButton icon="i-heroicons-x-mark" color="gray" variant="ghost" :onClick="() => { isNavOpen = false }" />
           </div>
           <div class="scroll-area flex-1 space-y-4 overflow-y-auto px-4 py-4">
-            <UAccordion :items="navigationLinks" variant="solid" color="indigo" class="divide-neutral-800">
-              <template #default="{ item, index, open }">
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  class="w-full justify-between text-left text-sm font-semibold"
-                  :aria-expanded="open"
-                  :aria-controls="`mobile-project-${index}`"
-                >
-                  <span class="flex items-center gap-2">
-                    <UIcon name="i-heroicons-folder" class="h-5 w-5 text-neutral-300" />
-                    {{ item.label }}
-                  </span>
-                  <UIcon :name="open ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="h-4 w-4" />
-                </UButton>
+            <UAccordion
+              :items="navigationLinks"
+              type="multiple"
+              :default-value="openProjectValues"
+              variant="solid"
+              color="indigo"
+              class="divide-neutral-800"
+            >
+              <template #leading>
+                <UIcon name="i-heroicons-folder" class="h-5 w-5 text-neutral-300" />
               </template>
-              <template #item="{ item }">
+              <template #default="{ item }">
+                {{ item.label }}
+              </template>
+              <template #trailing="{ open }">
+                <UIcon :name="open ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="h-4 w-4" />
+              </template>
+              <template #project-body="{ item }">
                 <div class="space-y-2 pt-2">
-                  <p class="px-2 text-xs text-neutral-400">{{ item.description }}</p>
                   <div class="space-y-1">
-                    <UButton
+                    <a
                       v-for="model in item.children"
                       :key="model.value"
-                      color="gray"
-                      variant="ghost"
-                      class="w-full justify-start gap-2 text-left"
+                      role="button"
+                      :href="`/?project=${encodeURIComponent(model.meta.projectSlug)}&model=${encodeURIComponent(model.meta.modelId)}`"
+                      class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-800/60"
                       :class="{
-                        'bg-indigo-500/10 text-indigo-200 ring-1 ring-indigo-500/30': selectedModel?.id === model.meta.id
+                        'bg-indigo-500/10 text-indigo-200 ring-1 ring-indigo-500/30': selectedModel?.id === model.meta.modelId
                       }"
-                      @click="() => { selectProjectModel(model.meta.project, model.meta.model); isNavOpen = false; }"
                     >
                       <UIcon name="i-heroicons-cube-transparent" class="h-4 w-4" />
-                      <div class="flex flex-col">
-                        <span class="text-sm font-semibold">{{ model.label }}</span>
-                        <span class="text-xs text-neutral-400">{{ model.description }}</span>
-                      </div>
-                    </UButton>
+                      <span class="text-sm font-semibold">{{ model.label }}</span>
+                    </a>
                   </div>
                 </div>
               </template>
@@ -203,7 +195,7 @@
                         <UIcon :name="open ? 'i-heroicons-minus-small' : 'i-heroicons-plus-small'" class="h-5 w-5" />
                       </UButton>
                     </template>
-                    <template #item="{ item }">
+                    <template #body="{ item }">
                       <ul class="mt-2 space-y-2 text-sm text-neutral-300">
                         <li v-for="(point, idx) in item.points" :key="idx" class="flex items-start gap-2">
                           <UIcon name="i-heroicons-sparkles" class="mt-0.5 h-4 w-4 text-indigo-300" />
@@ -228,23 +220,35 @@ import { projects } from '~/data/projects';
 import type { ModelBuild, Project } from '~/types/projects';
 
 const isNavOpen = ref(false);
-const selectedProject = ref<Project | null>(projects[0] ?? null);
-const selectedModel = ref<ModelBuild | null>(projects[0]?.models[0] ?? null);
+const route = useRoute();
+
+const selectedProject = computed<Project | null>(() => {
+  const slug = (route.query.project as string | undefined) ?? projects[0]?.slug;
+  return projects.find((project) => project.slug === slug) ?? projects[0] ?? null;
+});
+
+const selectedModel = computed<ModelBuild | null>(() => {
+  const project = selectedProject.value;
+  if (!project) return null;
+
+  const id = (route.query.model as string | undefined) ?? project.models[0]?.id;
+  return project.models.find((model) => model.id === id) ?? project.models[0] ?? null;
+});
 
 const navigationLinks = computed(() =>
   projects.map((project) => ({
+    value: project.slug,
     label: project.title,
-    description: project.summary,
-    defaultOpen: true,
     slot: 'project',
     children: project.models.map((model) => ({
       label: model.name,
-      description: model.description,
       value: `${project.slug}-${model.id}`,
-      meta: { project, model, id: model.id }
+      meta: { projectSlug: project.slug, modelId: model.id }
     }))
   }))
 );
+
+const openProjectValues = computed(() => navigationLinks.value.map((item, index) => item.value ?? String(index)));
 
 const taskItems = computed(() =>
   (selectedProject.value?.tasks ?? []).map((task) => ({
@@ -253,9 +257,4 @@ const taskItems = computed(() =>
     points: task.details
   }))
 );
-
-function selectProjectModel(project: Project, model: ModelBuild) {
-  selectedProject.value = project;
-  selectedModel.value = model;
-}
 </script>

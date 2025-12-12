@@ -93,7 +93,7 @@ test.describe('Model Benchmark Viewer', () => {
     await expect(page.getByRole('button', { name: /Browse projects/i })).toBeVisible();
     
     // The sidebar should be hidden on mobile
-    await expect(page.locator('aside.hidden').first()).toBeVisible();
+    await expect(page.locator('aside.hidden').first()).toBeHidden();
   });
 });
 
