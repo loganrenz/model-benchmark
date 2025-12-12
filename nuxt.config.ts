@@ -3,6 +3,8 @@ export default defineNuxtConfig({
   
   modules: ['@nuxt/ui'],
   
+  css: ['~/assets/css/tailwind.css'],
+  
   nitro: {
     preset: 'vercel'
   },
