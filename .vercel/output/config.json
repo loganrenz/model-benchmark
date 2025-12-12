@@ -62,10 +62,6 @@
       "dest": "/__fallback"
     },
     {
-      "src": "/api/manifest",
-      "dest": "/api/manifest"
-    },
-    {
       "src": "/__nuxt_error",
       "dest": "/__nuxt_error"
     },

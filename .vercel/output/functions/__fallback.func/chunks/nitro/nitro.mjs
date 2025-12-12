@@ -4284,7 +4284,7 @@ function _expandFromEnv(value) {
 const _inlineRuntimeConfig = {
   "app": {
     "baseURL": "/",
-    "buildId": "c835737a-d837-4e3c-94e3-c8234b8692f4",
+    "buildId": "1fc0121b-b390-4a8b-92a9-eb4153ceeb4a",
     "buildAssetsDir": "/_nuxt/",
     "cdnURL": ""
   },
@@ -4844,11 +4844,9 @@ const _cY2hzD = defineCachedEventHandler(async (event) => {
   // 1 week
 });
 
-const _lazy_q7EAP2 = () => import('../routes/api/manifest.get.mjs');
 const _lazy_LuixcS = () => import('../routes/renderer.mjs').then(function (n) { return n.r; });
 
 const handlers = [
-  { route: '/api/manifest', handler: _lazy_q7EAP2, lazy: true, middleware: false, method: "get" },
   { route: '/__nuxt_error', handler: _lazy_LuixcS, lazy: true, middleware: false, method: undefined },
   { route: '/__nuxt_island/**', handler: _SxA8c9, lazy: false, middleware: false, method: undefined },
   { route: '/api/_nuxt_icon/:collection', handler: _cY2hzD, lazy: false, middleware: false, method: undefined },
@@ -5009,5 +5007,5 @@ const listener = function(req, res) {
   return handler(req, res);
 };
 
-export { $fetch$1 as $, createHooks as A, isEqual$1 as B, isEqual as C, stringifyParsedURL as D, stringifyQuery as E, toRouteMatcher as F, createRouter$1 as G, listener as H, getResponseStatus as a, buildAssetsURL as b, defineRenderHandler as c, defineEventHandler as d, getQuery as e, createError$1 as f, getResponseStatusText as g, destr as h, getRouteRules as i, useNitroApp as j, parseQuery as k, hasProtocol as l, joinURL as m, withTrailingSlash as n, withoutTrailingSlash as o, publicAssetsURL as p, isScriptProtocol as q, sanitizeStatusCode as r, serialize$1 as s, getContext as t, useRuntimeConfig as u, baseURL as v, withQuery as w, defuFn as x, klona as y, defu as z };
+export { $fetch$1 as $, isEqual$1 as A, isEqual as B, stringifyParsedURL as C, stringifyQuery as D, toRouteMatcher as E, createRouter$1 as F, listener as G, getResponseStatus as a, buildAssetsURL as b, getQuery as c, defineRenderHandler as d, createError$1 as e, destr as f, getResponseStatusText as g, getRouteRules as h, useNitroApp as i, parseQuery as j, hasProtocol as k, joinURL as l, withTrailingSlash as m, withoutTrailingSlash as n, isScriptProtocol as o, publicAssetsURL as p, sanitizeStatusCode as q, getContext as r, serialize$1 as s, baseURL as t, useRuntimeConfig as u, defuFn as v, withQuery as w, klona as x, defu as y, createHooks as z };
 //# sourceMappingURL=nitro.mjs.map

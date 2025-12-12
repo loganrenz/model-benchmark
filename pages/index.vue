@@ -6,7 +6,8 @@ defineOptions({ name: 'ProjectViewerPage' })
 const route = useRoute()
 const router = useRouter()
 
-const { data: manifest, error } = await useFetch<Manifest>('/api/manifest')
+// Load from public/ as the single source of truth (works on Vercel static output too)
+const { data: manifest, error } = await useFetch<Manifest>('/data/manifest.json')
 
 const drawerOpen = ref(false)
 
