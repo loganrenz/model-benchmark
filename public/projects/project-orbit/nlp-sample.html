@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orbit NLP Sample</title>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0b1726; color: #e2e8f0; margin: 0; }
+    .panel { max-width: 720px; margin: 1.5rem auto; padding: 1.5rem; background: linear-gradient(135deg, #0ea5e9, #6366f1); border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.35); }
+    h1 { margin: 0 0 0.5rem; }
+    .bubble { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; padding: 1rem; margin: 0.5rem 0; backdrop-filter: blur(8px); }
+    .bubble strong { display: block; color: #f8fafc; margin-bottom: 0.35rem; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Prompt + Answer</h1>
+    <div class="bubble">
+      <strong>Prompt</strong>
+      Explain how the heliocentric orbit of a satellite affects its downlink schedule.
+    </div>
+    <div class="bubble">
+      <strong>Model Output</strong>
+      Downlink windows cluster near the perigee passes where the vehicle is closest to ground stations. Higher eccentricity creates
+      larger gaps between viable contacts, while near-circular orbits provide more consistent visibility. Power budgets and antenna
+      pointing constraints then fine-tune the final schedule.
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "projects": [
+    {
+      "id": "aurora",
+      "name": "project-aurora",
+      "models": [
+        {
+          "id": "vision-snapshot",
+          "name": "vision-snapshot.html",
+          "path": "/projects/project-aurora/vision-snapshot.html",
+          "description": "A compact computer vision demo rendered from project Aurora."
+        },
+        {
+          "id": "reporting-digest",
+          "name": "reporting-digest.html",
+          "path": "/projects/project-aurora/reporting-digest.html",
+          "description": "Summarized reporting output with styled tables and charts."
+        }
+      ]
+    },
+    {
+      "id": "orbit",
+      "name": "project-orbit",
+      "models": [
+        {
+          "id": "nlp-sample",
+          "name": "nlp-sample.html",
+          "path": "/projects/project-orbit/nlp-sample.html",
+          "description": "Natural language model response showcasing prompt+answer."
+        },
+        {
+          "id": "forecast-glance",
+          "name": "forecast-glance.html",
+          "path": "/projects/project-orbit/forecast-glance.html",
+          "description": "Time-series forecast preview with minimal styling."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aurora Reporting Digest</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+    .wrap { max-width: 860px; margin: 1.5rem auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 1.5rem; box-shadow: 0 12px 30px rgba(15,23,42,0.1); }
+    h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+    p { margin: 0 0 0.75rem; color: #475569; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { padding: 0.65rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #f1f5f9; font-weight: 700; font-size: 0.9rem; }
+    .badge { display: inline-flex; align-items: center; gap: 0.35rem; background: #eef2ff; color: #4338ca; padding: 0.25rem 0.6rem; border-radius: 999px; font-weight: 600; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="badge">Reporting Digest</div>
+    <h1>Status summary</h1>
+    <p>Exported metrics from the latest scheduled report.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Accuracy</td>
+          <td>97.2%</td>
+          <td style="color:#16a34a;">+0.8%</td>
+        </tr>
+        <tr>
+          <td>Latency P95</td>
+          <td>142 ms</td>
+          <td style="color:#f97316;">-12 ms</td>
+        </tr>
+        <tr>
+          <td>Daily volume</td>
+          <td>18,402 requests</td>
+          <td style="color:#16a34a;">+4.1%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

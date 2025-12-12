@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orbit Forecast Glance</title>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f6f6f6; color: #0f172a; margin: 0; }
+    .card { max-width: 800px; margin: 1.5rem auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.25rem; box-shadow: 0 10px 24px rgba(0,0,0,0.08); }
+    h1 { margin: 0 0 0.4rem; font-size: 1.4rem; }
+    p { margin: 0 0 0.75rem; color: #475569; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
+    .tile { background: linear-gradient(135deg, #e0f2fe, #e0e7ff); border: 1px solid #dbeafe; border-radius: 12px; padding: 0.75rem; }
+    .tile strong { display: block; color: #0f172a; }
+    small { color: #0ea5e9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Forecast at a glance</h1>
+    <p>Trend markers generated from the latest projection run.</p>
+    <div class="grid">
+      <div class="tile">
+        <strong>Week +1</strong>
+        <small>↑ 3.1%</small>
+        <p>Stability expected; light growth in traffic.</p>
+      </div>
+      <div class="tile">
+        <strong>Week +2</strong>
+        <small>↑ 4.5%</small>
+        <p>Seasonal bump beginning; monitor latency closely.</p>
+      </div>
+      <div class="tile">
+        <strong>Week +3</strong>
+        <small>↓ 2.0%</small>
+        <p>Back to steady-state volumes after event window.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
