@@ -22,6 +22,13 @@ export const projects: Project[] = [
         description:
           'Enhanced traffic simulator with three lanes, gradient styling, real-time stats display, and smooth easing animations.',
         path: '/projects/traffic-simulator/custom/index.html'
+      },
+      {
+        id: 'gpt-5.2',
+        name: 'gpt-5.2 Implementation',
+        description:
+          'Two-lane, stopline-first simulation with smooth easing, hard safety clamps, and a compact stats header.',
+        path: '/projects/traffic-simulator/gpt-5.2/traffic-simulator-gpt-5.2.html'
       }
     ],
     tasks: [

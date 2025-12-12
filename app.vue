@@ -48,7 +48,7 @@
                   <UIcon :name="open ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="h-4 w-4" />
                 </UButton>
               </template>
-              <template #item="{ item }">
+              <template #project="{ item }">
                 <div class="space-y-2 pt-2">
                   <p class="px-2 text-xs text-neutral-400">{{ item.description }}</p>
                   <div class="space-y-1">
@@ -103,7 +103,7 @@
                   <UIcon :name="open ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="h-4 w-4" />
                 </UButton>
               </template>
-              <template #item="{ item }">
+              <template #project="{ item }">
                 <div class="space-y-2 pt-2">
                   <p class="px-2 text-xs text-neutral-400">{{ item.description }}</p>
                   <div class="space-y-1">

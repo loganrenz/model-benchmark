@@ -5,7 +5,7 @@ test.describe('Model Benchmark Viewer', () => {
     await page.goto('/');
     
     // Check that the Traffic Simulator project is visible in the sidebar navigation
-    await expect(page.locator('aside').getByText('Traffic Simulator')).toBeVisible();
+    await expect(page.locator('aside').getByRole('button', { name: 'Traffic Simulator', exact: true })).toBeVisible();
     
     // Check that the project count badge shows 1 project
     await expect(page.locator('aside').getByText('1')).toBeVisible();
@@ -14,26 +14,27 @@ test.describe('Model Benchmark Viewer', () => {
   test('should display all models for each project', async ({ page }) => {
     await page.goto('/');
     
-    // Check that both models are visible in the navigation
+    // Check that all models are visible in the navigation
     await expect(page.locator('aside').getByRole('button', { name: /Reference Build/ })).toBeVisible();
     await expect(page.locator('aside').getByRole('button', { name: /Custom Implementation/ })).toBeVisible();
+    await expect(page.locator('aside').getByRole('button', { name: /gpt-5\.2 Implementation/ })).toBeVisible();
   });
 
   test('should show correct model count in header', async ({ page }) => {
     await page.goto('/');
     
-    // Check that the badge shows 2 builds
-    await expect(page.getByText('2 builds')).toBeVisible();
+    // Check that the badge shows 3 builds
+    await expect(page.getByText('3 builds')).toBeVisible();
   });
 
   test('should display project summary and instructions', async ({ page }) => {
     await page.goto('/');
     
     // Check project summary
-    await expect(page.getByText(/Animate a side-scrolling, two-lane street/)).toBeVisible();
+    await expect(page.getByRole('main').getByText(/Animate a side-scrolling, two-lane street/)).toBeVisible();
     
     // Check instructions in the alert
-    await expect(page.getByText(/Keep the scenario readable on mobile/)).toBeVisible();
+    await expect(page.getByRole('main').getByText(/Keep the scenario readable on mobile/)).toBeVisible();
   });
 
   test('should display all project tasks', async ({ page }) => {
@@ -93,7 +94,7 @@ test.describe('Model Benchmark Viewer', () => {
     await expect(page.getByRole('button', { name: /Browse projects/i })).toBeVisible();
     
     // The sidebar should be hidden on mobile
-    await expect(page.locator('aside.hidden').first()).toBeVisible();
+    await expect(page.locator('aside.hidden').first()).toBeHidden();
   });
 });
 
