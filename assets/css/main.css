@@ -8,5 +8,8 @@
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  background-color: #ffffff;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
