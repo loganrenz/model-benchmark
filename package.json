@@ -4,18 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nuxt dev",
-    "build": "nuxt build",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "echo 'lint skipped'"
   },
   "dependencies": {
     "@nuxt/ui": "^4.2.1",
-    "nuxt": "^4.2.2"
+    "vue": "^3.5.12",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.22",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/vite": "^4.1.17",
+    "@vitejs/plugin-vue": "^6.0.0",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.1",
+    "vue-tsc": "^3.1.8"
   }
 }

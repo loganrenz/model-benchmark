@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Traffic Simulator - visual</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        background: #0b1224;
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+      .frame {
+        width: min(960px, 92vw);
+        background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.25), transparent 30%),
+          radial-gradient(circle at 80% 30%, rgba(74, 222, 128, 0.2), transparent 28%),
+          #0f172a;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 24px 56px rgba(0, 0, 0, 0.35);
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 22px;
+        color: #e0f2fe;
+      }
+      p {
+        margin: 0 0 14px;
+        line-height: 1.6;
+        color: #cbd5e1;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .tile {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .meter {
+        height: 6px;
+        background: rgba(148, 163, 184, 0.4);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+      .meter span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #22d3ee, #a855f7);
+        width: 72%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <h1>Traffic Simulator — visual</h1>
+      <p>This HTML is a placeholder visual overlay for the traffic simulator. Replace with live canvases or SVGs as needed.</p>
+      <div class="grid">
+        <div class="tile">
+          <strong>Latency</strong>
+          <div class="meter"><span></span></div>
+        </div>
+        <div class="tile">
+          <strong>Flow</strong>
+          <div class="meter"><span style="width: 48%"></span></div>
+        </div>
+        <div class="tile">
+          <strong>Safety</strong>
+          <div class="meter"><span style="width: 88%"></span></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "projects": [
+    {
+      "id": "traffic-simulator",
+      "title": "Traffic Simulator",
+      "models": [
+        {
+          "id": "gpt-5.2-thinking",
+          "label": "gpt-5.2-thinking",
+          "path": "/projects/traffic-simulator/gpt-5.2-thinking.html",
+          "summary": "Simulated city traffic lights and flow."
+        },
+        {
+          "id": "gpt-5.2-visual",
+          "label": "gpt-5.2-visual",
+          "path": "/projects/traffic-simulator/gpt-5.2-visual.html",
+          "summary": "Visual overlay of the traffic model."
+        }
+      ]
+    },
+    {
+      "id": "template-showcase",
+      "title": "Template Showcase",
+      "models": [
+        {
+          "id": "placeholder",
+          "label": "Placeholder Demo",
+          "path": "/projects/template-showcase/placeholder.html",
+          "summary": "Lightweight HTML shell used for validation."
+        }
+      ]
+    }
+  ]
+}

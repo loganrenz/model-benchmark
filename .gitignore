@@ -1,6 +1,9 @@
 node_modules
-.nuxt
-.output
 dist
+.vite
 .DS_Store
 .env
+.nuxt
+.output
+components.d.ts
+auto-imports.d.ts
