@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: true },
   modules: ['@nuxt/ui'],
+  css: ['~/assets/css/main.css'],
   ui: {
     primary: 'sky',
     gray: 'slate'
