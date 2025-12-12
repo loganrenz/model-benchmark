@@ -180,7 +180,7 @@ vercel
 
 - **Next.js 14**: React framework for production
 - **React 18**: UI library
-- **Tailwind CSS 4**: Utility-first CSS framework
+- **Tailwind CSS 3**: Utility-first CSS framework
 - **Vercel**: Deployment platform
 
 ## Contributing

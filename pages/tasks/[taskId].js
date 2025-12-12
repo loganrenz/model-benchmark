@@ -90,16 +90,18 @@ export default function TaskView() {
                 </div>
                 <div className="p-6">
                   {selectedModel ? (
-                    <iframe
-                      src={`/tasks/${taskId}/${selectedModel}/index.html`}
-                      className="w-full border-2 border-gray-200 rounded-lg"
-                      style={{ minHeight: '600px', height: '80vh' }}
-                      title={`${selectedModel} results`}
-                      onError={(e) => {
-                        // If iframe fails, show a fallback
-                        e.target.style.display = 'none'
-                      }}
-                    />
+                    <>
+                      <iframe
+                        src={`/tasks/${taskId}/${selectedModel}/index.html`}
+                        className="w-full border-2 border-gray-200 rounded-lg"
+                        style={{ minHeight: '600px', height: '80vh' }}
+                        title={`${selectedModel} results`}
+                      />
+                      <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded hidden" id="iframe-error">
+                        <p className="font-semibold">Unable to load results</p>
+                        <p className="text-sm">The model results file may be missing or inaccessible.</p>
+                      </div>
+                    </>
                   ) : null}
                   <div className="mt-4 text-sm text-gray-500">
                     <p>
