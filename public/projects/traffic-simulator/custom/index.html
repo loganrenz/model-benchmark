@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Custom Traffic Simulator</title>
+    <title>Custom Traffic Simulator (GPT-5.2)</title>
     <style>
       :root {
         color-scheme: dark;
@@ -55,6 +55,17 @@
         border: 1px solid rgba(102, 126, 234, 0.3);
         border-radius: 12px;
         backdrop-filter: blur(10px);
+      }
+      .build-tag {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: rgba(226, 232, 240, 0.8);
+        border: 1px solid rgba(102, 126, 234, 0.35);
+        background: rgba(15, 23, 42, 0.55);
+        padding: 6px 10px;
+        border-radius: 999px;
+        white-space: nowrap;
       }
       .light-indicator {
         display: flex;
@@ -162,6 +173,7 @@
             <div class="lamp yellow" id="lamp-yellow"></div>
             <div class="lamp red" id="lamp-red"></div>
           </div>
+          <div class="build-tag">GPT-5.2 build</div>
           <div class="stats">
             <div class="stat-item">
               <span class="stat-label">Cars</span>
@@ -185,8 +197,8 @@
       const canvas = document.getElementById('sim');
       const ctx = canvas.getContext('2d');
 
-      // Lane configuration - three lanes instead of two for variety
-      const lanes = [120, 180, 240];
+      // Lane configuration - two lanes (matches project prompt)
+      const lanes = [140, 220];
       const roadTop = 80;
       const roadBottom = 300;
       const stopLineX = 520;
@@ -329,16 +341,20 @@
         ctx.lineWidth = 2.5;
         ctx.strokeStyle = 'rgba(100, 116, 139, 0.5)';
         
-        // Draw lane lines
-        const laneY1 = (lanes[0] + lanes[1]) / 2;
-        const laneY2 = (lanes[1] + lanes[2]) / 2;
-        
-        ctx.beginPath();
-        ctx.moveTo(0, laneY1);
-        ctx.lineTo(canvas.width, laneY1);
-        ctx.moveTo(0, laneY2);
-        ctx.lineTo(canvas.width, laneY2);
-        ctx.stroke();
+        // Draw lane divider(s)
+        if (lanes.length > 1) {
+          const dividers = [];
+          for (let i = 0; i < lanes.length - 1; i++) {
+            dividers.push((lanes[i] + lanes[i + 1]) / 2);
+          }
+
+          ctx.beginPath();
+          dividers.forEach((y) => {
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+          });
+          ctx.stroke();
+        }
         ctx.setLineDash([]);
 
         // Road edges

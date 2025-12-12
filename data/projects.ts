@@ -18,7 +18,7 @@ export const projects: Project[] = [
       },
       {
         id: 'custom',
-        name: 'Custom Implementation',
+        name: 'Custom Implementation (GPT-5.2)',
         description:
           'Enhanced traffic simulator with three lanes, gradient styling, real-time stats display, and smooth easing animations.',
         path: '/projects/traffic-simulator/custom/index.html'

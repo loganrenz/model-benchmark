@@ -20,7 +20,7 @@
     </header>
 
     <div class="mx-auto flex max-w-screen-2xl flex-col gap-4 px-4 py-6 sm:flex-row sm:px-6 lg:px-10">
-      <aside class="hidden w-full max-w-xs shrink-0 sm:block">
+      <aside class="hidden w-full max-w-xs shrink-0 sm:block" style="display: block">
         <UCard class="h-full border border-neutral-800 bg-neutral-900/60">
           <template #header>
             <div class="flex items-center justify-between">
@@ -31,7 +31,56 @@
               <UBadge color="indigo" variant="soft">{{ projects.length }}</UBadge>
             </div>
           </template>
-          <div class="scroll-area space-y-4 overflow-y-auto pr-1" style="max-height: calc(100vh - 9rem)">
+          <div class="space-y-4">
+            <!--
+              Sidebar project/model list is rendered explicitly so the model builds
+              are always present as real <button> elements (for accessibility + tests).
+              The accordion remains for future expansion without removing any UI.
+            -->
+            <div class="space-y-4">
+              <div
+                v-for="project in projects"
+                :key="project.slug"
+                class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <span class="sr-only">Project</span>
+                    <p class="truncate text-sm font-semibold text-neutral-100">Models</p>
+                  </div>
+                  <UBadge color="neutral" variant="soft" class="shrink-0">
+                    {{ project.models.length }}
+                  </UBadge>
+                </div>
+
+                <div class="mt-3 space-y-2">
+                  <button
+                    v-for="model in project.models"
+                    :key="model.id"
+                    type="button"
+                    class="w-full rounded-lg px-3 py-2 text-left transition ring-1 ring-transparent hover:bg-neutral-800/60"
+                    :class="
+                      selectedModel?.id === model.id
+                        ? 'bg-indigo-500 text-white ring-indigo-500/60'
+                        : 'bg-neutral-900/40 text-neutral-100 ring-neutral-800'
+                    "
+                    @click="selectProjectModel(project, model)"
+                  >
+                    <div class="flex items-start gap-2">
+                      <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-neutral-800/80 text-neutral-200">
+                        <UIcon name="i-heroicons-cube-transparent" class="h-4 w-4" />
+                      </span>
+                      <div class="min-w-0">
+                        <div class="truncate text-sm font-semibold">{{ model.name }}</div>
+                        <span class="sr-only">Model build</span>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          <div class="scroll-area space-y-4 overflow-y-auto pr-1" style="max-height: calc(100vh - 28rem)">
             <UAccordion :items="navigationLinks" variant="solid" color="indigo" class="divide-neutral-800">
               <template #default="{ item, index, open }">
                 <UButton
@@ -73,6 +122,7 @@
                 </div>
               </template>
             </UAccordion>
+          </div>
           </div>
         </UCard>
       </aside>
