@@ -15,6 +15,13 @@ export const projects: Project[] = [
         description:
           'Baseline simulation with a paired stoplight cycle, light-controlled flow, and responsive spacing so cars never touch.',
         path: '/projects/traffic-simulator/reference/index.html'
+      },
+      {
+        id: 'custom',
+        name: 'Custom Implementation',
+        description:
+          'Enhanced traffic simulator with three lanes, gradient styling, real-time stats display, and smooth easing animations.',
+        path: '/projects/traffic-simulator/custom/index.html'
       }
     ],
     tasks: [
