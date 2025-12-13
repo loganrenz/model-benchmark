@@ -92,7 +92,7 @@
         <span class="dot" id="dot"></span>
         <span id="label">Light</span>
       </div>
-      <div class="hint">Cars stop on red, flow on green (3.5s phases)</div>
+      <div class="hint">Cars stop on red, flow on green (2s phases)</div>
     </header>
     <canvas id="c" aria-label="Traffic simulation canvas"></canvas>
   </div>
@@ -127,7 +127,7 @@
         lastMs: performance.now(),
         cars: [],
         light: {
-          phaseSec: 3.5,  // each red/green lasts 3.5s
+          phaseSec: 2.0,  // each red/green lasts 2s (4s full cycle)
           offsetSec: 0.2,
           isGreen: true,
         },
@@ -318,10 +318,14 @@
           // Integrate position
           car.x += car.v * dt;
 
-          // Hard clamp if we crossed the limit.
-          if (distToLimit < 0) {
-            car.x += distToLimit; // move back so front aligns with limit
-            car.v = 0;
+          // Hard clamp if we crossed the limit (re-check after integration).
+          if (limitFrontX < Infinity) {
+            const newFrontX = car.x + car.length * 0.5;
+            const over = newFrontX - limitFrontX;
+            if (over > 0) {
+              car.x -= over; // move back so front aligns with limit
+              car.v = 0;
+            }
           }
 
           // tiny lane wobble for life
