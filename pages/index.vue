@@ -4,7 +4,6 @@ import type { Manifest } from '~/types/manifest'
 const route = useRoute()
 const router = useRouter()
 
-// Fetch manifest client-only to avoid SSR issues
 const { data: manifest, error } = await useFetch<Manifest>('/data/manifest.json', { 
   server: false 
 })
@@ -25,14 +24,12 @@ function selectModel(model: ActiveModel) {
   drawerOpen.value = false
 }
 
-// Initialize active model from query or default to first
 watchEffect(() => {
   if (!manifest.value) return
   
   const queryModel = route.query.model as string | undefined
   let found: ActiveModel | null = null
 
-  // Try to find model from query
   if (queryModel) {
     for (const project of manifest.value.projects) {
       for (const model of project.models) {
@@ -50,7 +47,6 @@ watchEffect(() => {
     }
   }
 
-  // Default to first model
   if (!found && manifest.value.projects.length > 0) {
     const project = manifest.value.projects[0]
     const model = project.models[0]
@@ -70,88 +66,99 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="h-screen w-full bg-gradient-to-br from-slate-50 to-slate-100">
+  <div class="flex min-h-screen h-dvh w-full flex-col bg-gray-50">
     <!-- Error State -->
-    <div v-if="error" class="flex h-full items-center justify-center p-6">
-      <div class="max-w-md rounded-2xl border border-red-200 bg-white p-8 shadow-lg">
-        <div class="mb-3 flex items-center justify-center">
-          <div class="rounded-full bg-red-100 p-3">
-            <UIcon name="i-heroicons-exclamation-triangle" class="size-6 text-red-600" />
-          </div>
+    <div v-if="error" class="flex flex-1 items-center justify-center p-8">
+      <div class="w-full max-w-sm text-center">
+        <div class="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-red-100">
+          <UIcon name="i-heroicons-exclamation-triangle" class="size-7 text-red-600" />
         </div>
-        <h2 class="text-center text-xl font-bold text-gray-900">Failed to load manifest</h2>
-        <p class="mt-3 text-center text-sm text-gray-600">
-          Ensure <code class="rounded bg-red-50 px-2 py-1 text-red-700">public/data/manifest.json</code> exists and is valid.
+        <h1 class="text-xl font-semibold text-gray-900">Failed to load</h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Could not load manifest.json
         </p>
+        <button 
+          class="mt-6 rounded-full bg-gray-900 px-6 py-2.5 text-sm font-medium text-white active:scale-95 transition-transform"
+          @click="$router.go(0)"
+        >
+          Try again
+        </button>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-else-if="!manifest" class="flex h-full items-center justify-center">
+    <div v-else-if="!manifest" class="flex flex-1 items-center justify-center">
       <div class="text-center">
-        <div class="mb-4 inline-block animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 size-12"></div>
-        <p class="text-lg font-medium text-gray-700">Loading projects...</p>
+        <div class="mx-auto mb-4 size-8 animate-spin rounded-full border-2 border-gray-200 border-t-indigo-600"></div>
+        <p class="text-sm text-gray-500">Loading...</p>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div v-else class="flex h-full flex-col">
-      <!-- Top Header Bar -->
-      <header class="relative z-30 border-b border-gray-200 bg-white/80 backdrop-blur-lg">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 p-2 shadow-lg">
-              <UIcon name="i-heroicons-cube" class="size-5 text-white" />
-            </div>
-            <div>
-              <h1 class="text-lg font-bold text-gray-900">AI Agent Showcase</h1>
-              <p v-if="active" class="text-xs text-gray-500">{{ active.label }}</p>
-            </div>
+    <template v-else>
+      <!-- Header -->
+      <header class="safe-top relative z-30 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+        <div class="flex items-center justify-between px-5 py-4">
+          <div class="min-w-0 flex-1">
+            <h1 class="text-lg font-semibold tracking-tight text-gray-900">
+              Showcase
+            </h1>
+            <p v-if="active" class="truncate text-sm text-gray-500">
+              {{ active.label }}
+            </p>
           </div>
+          
           <button
-            class="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+            class="ml-4 flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white active:scale-95 transition-transform"
             @click="drawerOpen = true"
           >
             <UIcon name="i-heroicons-squares-2x2" class="size-4" />
-            <span>Browse</span>
+            <span class="hidden sm:inline">Browse</span>
           </button>
         </div>
       </header>
 
-      <!-- Iframe Viewer -->
-      <div class="flex-1 overflow-hidden">
+      <!-- Viewer -->
+      <main class="relative flex-1 overflow-hidden bg-white">
         <iframe
           v-if="active"
           :key="active.src"
           :src="active.src"
           :title="active.label"
           class="size-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         />
-        <div v-else class="flex h-full items-center justify-center p-6">
-          <div class="text-center">
-            <div class="mb-6 inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 p-8">
-              <UIcon name="i-heroicons-cube-transparent" class="size-20 text-blue-600" />
+        
+        <!-- Empty State -->
+        <div v-else class="flex h-full items-center justify-center p-8">
+          <div class="max-w-md text-center">
+            <div class="mx-auto mb-8 flex size-20 items-center justify-center rounded-2xl bg-gray-100">
+              <UIcon name="i-heroicons-cube-transparent" class="size-10 text-gray-400" />
             </div>
-            <h2 class="mb-2 text-2xl font-bold text-gray-900">Welcome to AI Agent Showcase</h2>
-            <p class="mb-6 text-gray-600">Select a project to compare different AI implementations</p>
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">
+              Welcome
+            </h2>
+            <p class="mt-3 text-gray-500">
+              Compare different AI implementations side by side
+            </p>
             <button
-              class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
+              class="mt-8 inline-flex items-center gap-2 rounded-full bg-gray-900 px-6 py-3 text-sm font-medium text-white active:scale-95 transition-transform"
               @click="drawerOpen = true"
             >
-              <UIcon name="i-heroicons-rocket-launch" class="size-5" />
-              Get Started
+              <span>Browse projects</span>
+              <UIcon name="i-heroicons-arrow-right" class="size-4" />
             </button>
           </div>
         </div>
-      </div>
+      </main>
 
-      <!-- Bottom Drawer -->
+      <!-- Drawer -->
       <ProjectExplorerDrawer
         v-model:open="drawerOpen"
         :manifest="manifest"
         :active-key="active?.key"
         @select="selectModel"
       />
-    </div>
+    </template>
   </div>
 </template>

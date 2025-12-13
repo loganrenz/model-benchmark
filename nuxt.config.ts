@@ -15,8 +15,8 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Project Viewer',
-      viewport: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover, user-scalable=yes',
+      title: 'Showcase',
+      viewport: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
       htmlAttrs: {
         lang: 'en'
       },
@@ -25,13 +25,16 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#ffffff' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
-        { name: 'apple-mobile-web-app-title', content: 'Project Viewer' },
+        { name: 'apple-mobile-web-app-title', content: 'Showcase' },
         { name: 'format-detection', content: 'telephone=no' },
-        { name: 'mobile-web-app-capable', content: 'yes' },
-        { name: 'description', content: 'View and explore 3D models and projects' }
+        { name: 'description', content: 'Compare AI implementations side by side' }
       ],
       link: [
-        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' }
       ]
     }
   }
