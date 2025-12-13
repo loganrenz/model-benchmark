@@ -20,6 +20,13 @@ const props = defineProps<{
       ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
       : 'bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100'"
   >
+    <!-- Skip to main content link -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:font-semibold focus:shadow-lg"
+    >
+      Skip to main content
+    </a>
     <AppHeader :breadcrumbs="breadcrumbs" :dark="dark">
       <template #actions>
         <slot name="header-actions">
@@ -49,11 +56,13 @@ const props = defineProps<{
     </AppHeader>
 
     <main 
+      id="main-content"
       class="flex-1"
       :class="[
         fullWidth ? '' : 'max-w-7xl mx-auto w-full',
         noPadding ? '' : 'px-4 sm:px-6 lg:px-8 py-8 lg:py-12'
       ]"
+      tabindex="-1"
     >
       <slot />
     </main>

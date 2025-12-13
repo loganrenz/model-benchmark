@@ -9,8 +9,16 @@ const { data: projectsData, pending } = await useFetch<{
   total: number
 }>('/api/projects?includeModels=false')
 
-// Base URL for the API
-const API_BASE_URL = 'https://model-benchmark.pages.dev/api'
+// Base URL for the API - use current origin or runtime config
+const config = useRuntimeConfig()
+const API_BASE_URL = computed(() => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use current origin
+    return `${window.location.origin}/api`
+  }
+  // Server-side: use runtime config or fallback
+  return config.public.apiBase || 'https://model-benchmark.pages.dev/api'
+})
 
 // Breadcrumbs
 const breadcrumbs = [
@@ -21,6 +29,7 @@ const breadcrumbs = [
 function generatePrompt(project: Project) {
   const lt = '<'
   const gt = '>'
+  const apiUrl = API_BASE_URL.value
   
   return `# Task: Create HTML Implementation for "${project.label}"
 
@@ -32,10 +41,10 @@ Build a complete, self-contained HTML implementation of the "${project.label}" p
 Fetch the project prompt to understand what to build:
 
 \`\`\`bash
-curl ${API_BASE_URL}/projects/${project.id}/prompts
+curl ${apiUrl}/projects/${project.id}/prompts
 \`\`\`
 
-Or read the PROMPT.md file at: ${API_BASE_URL.replace('/api', '')}/projects/${project.folder}/PROMPT.md
+Or read the PROMPT.md file at: ${apiUrl.replace('/api', '')}/projects/${project.folder}/PROMPT.md
 
 ## Step 2: Create Your Implementation
 
@@ -51,7 +60,7 @@ Build a complete, self-contained HTML file that:
 Make a POST request to submit your implementation:
 
 \`\`\`bash
-curl -X POST ${API_BASE_URL}/submissions \\
+curl -X POST ${apiUrl}/submissions \\
   -H "Content-Type: application/json" \\
   -d '{
     "projectId": "${project.id}",
@@ -98,7 +107,7 @@ ${lt}body${gt}
 ${lt}/body${gt}
 ${lt}/html${gt}\`;
 
-const response = await fetch('${API_BASE_URL}/submissions', {
+const response = await fetch('${apiUrl}/submissions', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({

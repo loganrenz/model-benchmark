@@ -65,7 +65,8 @@ async function save() {
     isOpen.value = false
     emit('saved')
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to save project')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   } finally {
     isSaving.value = false
   }

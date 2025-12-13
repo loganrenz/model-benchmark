@@ -63,14 +63,18 @@ const nextSubmission = computed(() => {
 const isTransitioning = ref(false)
 const transitionDirection = ref<'left' | 'right'>('right')
 
+// Iframe loading state
+const iframeLoading = ref(true)
+
 function navigateTo(model: Model | null, direction: 'left' | 'right') {
   if (!model?.submissionId || isTransitioning.value) return
   transitionDirection.value = direction
   isTransitioning.value = true
+  iframeLoading.value = true
   
   setTimeout(() => {
     router.push(`/projects/${projectId}/${model.submissionId}`)
-  }, 150)
+  }, 200)
 }
 
 function goToPrevious() {
@@ -172,6 +176,11 @@ onMounted(() => {
     updateScale()
   })
   window.addEventListener('resize', updateScale)
+  
+  // Reset loading state when submission changes
+  watch(() => route.params.submissionId, () => {
+    iframeLoading.value = true
+  })
 })
 
 onUnmounted(() => {
@@ -203,13 +212,14 @@ onUnmounted(() => {
               <NuxtLink 
                 :to="backUrl"
                 class="text-sm font-semibold text-slate-400 hover:text-white transition-colors truncate max-w-[100px] sm:max-w-[150px]"
+                :title="project?.label || 'Project'"
               >
                 {{ project?.label || 'Project' }}
               </NuxtLink>
               
-              <UIcon name="i-heroicons-chevron-right" class="size-4 text-slate-600 flex-shrink-0" />
+              <UIcon name="i-heroicons-chevron-right" class="size-4 text-slate-600 flex-shrink-0" aria-hidden="true" />
               
-              <span class="text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[200px]">
+              <span class="text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[200px]" :title="submissionLabel">
                 {{ submissionLabel }}
               </span>
             </nav>
@@ -220,10 +230,11 @@ onUnmounted(() => {
             <button
               @click="goToPrevious"
               :disabled="!hasPrevious"
-              class="flex size-9 items-center justify-center rounded-lg bg-white/5 border border-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/20 active:scale-95"
+              class="flex size-9 items-center justify-center rounded-lg bg-white/5 border border-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/20 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
               title="Previous (←)"
+              aria-label="Previous submission"
             >
-              <UIcon name="i-heroicons-chevron-left" class="size-5 text-white" />
+              <UIcon name="i-heroicons-chevron-left" class="size-5 text-white" aria-hidden="true" />
             </button>
             
             <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
@@ -235,19 +246,21 @@ onUnmounted(() => {
             <button
               @click="goToNext"
               :disabled="!hasNext"
-              class="flex size-9 items-center justify-center rounded-lg bg-white/5 border border-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/20 active:scale-95"
+              class="flex size-9 items-center justify-center rounded-lg bg-white/5 border border-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/20 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
               title="Next (→)"
+              aria-label="Next submission"
             >
-              <UIcon name="i-heroicons-chevron-right" class="size-5 text-white" />
+              <UIcon name="i-heroicons-chevron-right" class="size-5 text-white" aria-hidden="true" />
             </button>
           </div>
 
           <button
             v-if="submissionSrc || submissionHtmlContent"
             @click="openInNewTab"
-            class="flex items-center gap-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-sm font-medium text-white transition-all active:scale-95 flex-shrink-0"
+            class="flex items-center gap-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-sm font-medium text-white transition-all active:scale-95 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+            aria-label="Open submission in new tab"
           >
-            <UIcon name="i-heroicons-arrow-top-right-on-square" class="size-4" />
+            <UIcon name="i-heroicons-arrow-top-right-on-square" class="size-4" aria-hidden="true" />
             <span class="hidden sm:inline">Open</span>
           </button>
         </div>
@@ -315,7 +328,7 @@ onUnmounted(() => {
 
       <!-- Main Content -->
       <div 
-        class="absolute inset-0 lg:inset-x-4 lg:inset-y-3 transition-all duration-300"
+        class="absolute inset-0 lg:inset-x-4 lg:inset-y-3 transition-all duration-300 ease-in-out"
         :class="{
           'opacity-0 scale-[0.98]': isTransitioning,
           'translate-x-8': isTransitioning && transitionDirection === 'left',
@@ -324,8 +337,19 @@ onUnmounted(() => {
       >
         <div 
           ref="iframeContainerRef"
-          class="size-full rounded-none lg:rounded-2xl overflow-hidden bg-white shadow-2xl shadow-black/50 ring-1 ring-white/10"
+          class="size-full rounded-none lg:rounded-2xl overflow-hidden bg-white shadow-2xl shadow-black/50 ring-1 ring-white/10 relative"
         >
+          <!-- Loading overlay -->
+          <div 
+            v-if="iframeLoading"
+            class="absolute inset-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm z-10"
+          >
+            <div class="text-center">
+              <div class="mx-auto mb-4 size-12 animate-spin rounded-full border-[3px] border-white/10 border-t-cyan-400"></div>
+              <p class="text-sm font-medium text-white">Loading submission...</p>
+            </div>
+          </div>
+          
           <!-- Scaled iframe wrapper for mobile -->
           <div 
             class="origin-top-left lg:size-full"
@@ -344,6 +368,7 @@ onUnmounted(() => {
               :title="submissionLabel"
               class="size-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              @load="iframeLoading = false"
             />
             <iframe
               v-else-if="submissionHtmlContent"
@@ -351,6 +376,7 @@ onUnmounted(() => {
               :title="submissionLabel"
               class="size-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              @load="iframeLoading = false"
             />
           </div>
         </div>
@@ -362,9 +388,10 @@ onUnmounted(() => {
           <button
             @click="goToPrevious"
             :disabled="!hasPrevious"
-            class="flex size-8 items-center justify-center rounded-full bg-white/10 transition-all disabled:opacity-30 active:scale-95"
+            class="flex size-8 items-center justify-center rounded-full bg-white/10 transition-all disabled:opacity-30 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            aria-label="Previous submission"
           >
-            <UIcon name="i-heroicons-chevron-left" class="size-4 text-white" />
+            <UIcon name="i-heroicons-chevron-left" class="size-4 text-white" aria-hidden="true" />
           </button>
           
           <div class="flex items-center gap-1 px-2">
@@ -388,9 +415,10 @@ onUnmounted(() => {
           <button
             @click="goToNext"
             :disabled="!hasNext"
-            class="flex size-8 items-center justify-center rounded-full bg-white/10 transition-all disabled:opacity-30 active:scale-95"
+            class="flex size-8 items-center justify-center rounded-full bg-white/10 transition-all disabled:opacity-30 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            aria-label="Next submission"
           >
-            <UIcon name="i-heroicons-chevron-right" class="size-4 text-white" />
+            <UIcon name="i-heroicons-chevron-right" class="size-4 text-white" aria-hidden="true" />
           </button>
         </div>
       </div>

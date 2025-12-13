@@ -72,16 +72,18 @@ const isHome = computed(() => route.path === '/')
                 :class="dark 
                   ? 'text-slate-400 hover:text-white' 
                   : 'text-gray-500 hover:text-gray-900'"
+                :title="crumb.label"
               >
-                <UIcon v-if="crumb.icon" :name="crumb.icon" class="size-4 flex-shrink-0" />
+                <UIcon v-if="crumb.icon" :name="crumb.icon" class="size-4 flex-shrink-0" aria-hidden="true" />
                 <span class="truncate">{{ crumb.label }}</span>
               </NuxtLink>
               <span 
                 v-else 
                 class="flex items-center gap-1.5 text-sm font-bold truncate max-w-[150px] sm:max-w-[250px]"
                 :class="dark ? 'text-white' : 'text-gray-900'"
+                :title="crumb.label"
               >
-                <UIcon v-if="crumb.icon" :name="crumb.icon" class="size-4 flex-shrink-0" />
+                <UIcon v-if="crumb.icon" :name="crumb.icon" class="size-4 flex-shrink-0" aria-hidden="true" />
                 <span class="truncate">{{ crumb.label }}</span>
               </span>
               
@@ -111,13 +113,14 @@ const isHome = computed(() => route.path === '/')
             </NuxtLink>
             <NuxtLink
               to="/submit"
-              class="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white shadow-lg active:scale-95 transition-all group"
+              class="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white shadow-lg active:scale-95 transition-all group focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               :class="dark 
                 ? 'bg-gradient-to-br from-indigo-600 to-purple-600 shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40' 
                 : 'bg-gradient-to-br from-indigo-600 to-purple-600 shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40'"
+              aria-label="Submit implementation"
             >
               <span class="hidden sm:inline">Submit</span>
-              <UIcon name="i-heroicons-paper-airplane" class="size-4 group-hover:translate-x-0.5 transition-transform" />
+              <UIcon name="i-heroicons-paper-airplane" class="size-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
             </NuxtLink>
           </slot>
         </div>

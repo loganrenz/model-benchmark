@@ -49,7 +49,8 @@ async function handleReview(status: 'approved' | 'rejected') {
     isOpen.value = false
     emit('reviewed')
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to update submission')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   } finally {
     isReviewing.value = false
   }

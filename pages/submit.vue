@@ -28,8 +28,24 @@ const breadcrumbs = [
         </div>
         <h1 class="text-2xl font-bold text-gray-900">Failed to load</h1>
         <p class="mt-3 text-sm text-gray-600">
-          Could not load projects
+          Could not load projects. Please check your connection and try again.
         </p>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <button 
+            class="rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 active:scale-95 transition-all hover:shadow-xl hover:shadow-gray-900/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            @click="$router.go(0)"
+            aria-label="Retry loading projects"
+          >
+            Try again
+          </button>
+          <NuxtLink
+            to="/"
+            class="rounded-2xl bg-white border border-gray-300 px-8 py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            aria-label="Go to home page"
+          >
+            Go home
+          </NuxtLink>
+        </div>
       </div>
     </div>
 

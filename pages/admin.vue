@@ -30,7 +30,7 @@ const submissionsUrl = computed(() => {
 })
 
 // Submissions state
-const { data: submissionsData, refresh: refreshSubmissions } = await useFetch<{
+const { data: submissionsData, refresh: refreshSubmissions, pending: submissionsPending } = await useFetch<{
   submissions: Submission[]
   total: number
 }>(submissionsUrl, { watch: [submissionsUrl] })
@@ -46,6 +46,13 @@ const showProjectModal = ref(false)
 const editingProject = ref<Project | null>(null)
 const showReviewModal = ref(false)
 const selectedSubmission = ref<Submission | null>(null)
+
+// Confirmation modals
+const showDeleteConfirm = ref(false)
+const projectToDelete = ref<Project | null>(null)
+const showInitConfirm = ref(false)
+const showBackfillConfirm = ref(false)
+const showSeedConfirm = ref(false)
 
 // Other state
 const isInitializing = ref(false)
@@ -63,7 +70,8 @@ async function quickApproveSubmission(submission: Submission) {
     showSuccess('Submission approved successfully')
     await refreshSubmissions()
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to approve submission')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   }
 }
 
@@ -82,25 +90,32 @@ function openEditProject(project: Project) {
   showProjectModal.value = true
 }
 
-async function deleteProject(project: Project) {
-  const confirmed = confirm(`Are you sure you want to delete "${project.label}"? This will also delete all associated prompts.`)
-  if (!confirmed) return
+function openDeleteConfirm(project: Project) {
+  projectToDelete.value = project
+  showDeleteConfirm.value = true
+}
+
+async function deleteProject() {
+  if (!projectToDelete.value) return
 
   try {
-    await $fetch(`/api/admin/projects/${project.id}`, {
+    await $fetch(`/api/admin/projects/${projectToDelete.value.id}`, {
       method: 'DELETE'
     })
     showSuccess('Project deleted successfully')
     await refreshProjects()
+    projectToDelete.value = null
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to delete project')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   }
 }
 
-async function initializeDefaultProjects() {
-  const confirmed = confirm('Initialize default projects? Existing projects will not be affected.')
-  if (!confirmed) return
+function openInitConfirm() {
+  showInitConfirm.value = true
+}
 
+async function initializeDefaultProjects() {
   isInitializing.value = true
   try {
     const result = await $fetch('/api/admin/init-projects', {
@@ -113,16 +128,18 @@ async function initializeDefaultProjects() {
     showInfo(`${created} projects created, ${skipped} skipped`)
     await refreshProjects()
   } catch (error: any) {
-    showError('Failed to initialize projects')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   } finally {
     isInitializing.value = false
   }
 }
 
-async function backfillThumbnails() {
-  const confirmed = confirm('Generate thumbnails for all submissions that don\'t have them? This may take a while.')
-  if (!confirmed) return
+function openBackfillConfirm() {
+  showBackfillConfirm.value = true
+}
 
+async function backfillThumbnails() {
   isBackfilling.value = true
   try {
     const result = await $fetch('/api/admin/backfill-thumbnails', {
@@ -136,16 +153,18 @@ async function backfillThumbnails() {
     showInfo(message)
     await refreshSubmissions()
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to backfill thumbnails')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   } finally {
     isBackfilling.value = false
   }
 }
 
-async function seedSubmissions() {
-  const confirmed = confirm('Seed database with test submissions? This will add sample submissions for testing.')
-  if (!confirmed) return
+function openSeedConfirm() {
+  showSeedConfirm.value = true
+}
 
+async function seedSubmissions() {
   isSeeding.value = true
   try {
     const result = await $fetch('/api/admin/seed-submissions', {
@@ -156,7 +175,8 @@ async function seedSubmissions() {
     await refreshSubmissions()
     await refreshProjects()
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to seed submissions')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   } finally {
     isSeeding.value = false
   }
@@ -174,7 +194,8 @@ async function generateThumbnailForSubmission(submissionId: string, event: Event
     showSuccess('Thumbnail generated successfully')
     await refreshSubmissions()
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to generate thumbnail')
+    const { getErrorMessage } = useErrorHandler()
+    showError(getErrorMessage(error))
   } finally {
     generatingThumbnailFor.value = null
   }
@@ -259,21 +280,37 @@ async function onSubmissionReviewed() {
         <div class="flex-1" />
 
         <!-- Actions -->
-        <UButton @click="seedSubmissions" :disabled="isSeeding" color="success" size="sm">
+        <UButton @click="openSeedConfirm" :disabled="isSeeding" color="success" size="sm">
           {{ isSeeding ? 'Seeding...' : 'Seed Test Submissions' }}
         </UButton>
-        <UButton @click="backfillThumbnails" :disabled="isBackfilling" color="primary" size="sm">
+        <UButton @click="openBackfillConfirm" :disabled="isBackfilling" color="primary" size="sm">
           {{ isBackfilling ? 'Backfilling...' : 'Backfill Thumbnails' }}
         </UButton>
       </div>
 
-      <div v-if="!submissionsData" class="text-center py-12">
-        <div class="text-gray-500">Loading submissions...</div>
+      <div v-if="submissionsPending" class="space-y-4">
+        <div v-for="i in 5" :key="i" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 animate-pulse">
+          <div class="flex items-start gap-4">
+            <div class="shrink-0 w-32 h-24 rounded-lg bg-gray-200"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+              <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div v-else-if="submissionsData.submissions.length === 0" class="text-center py-12">
-        <div class="text-gray-500 text-lg">No {{ statusFilter === 'all' ? '' : statusFilter }} submissions{{
-          projectFilter ? ' for this project' : '' }}</div>
+      <div v-else-if="submissionsData && submissionsData.submissions.length === 0" class="text-center py-12">
+        <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg">
+          <UIcon name="i-heroicons-inbox" class="size-9 text-gray-400" />
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+          No {{ statusFilter === 'all' ? '' : statusFilter }} submissions{{ projectFilter ? ' for this project' : '' }}
+        </h3>
+        <p class="text-gray-600 text-sm">
+          {{ statusFilter === 'pending' ? 'All submissions have been reviewed.' : 'Try adjusting your filters.' }}
+        </p>
       </div>
 
       <div v-else class="grid gap-4">
@@ -333,7 +370,7 @@ async function onSubmissionReviewed() {
     <div v-if="activeTab === 'projects'">
       <div class="mb-6 flex gap-3">
         <UButton color="primary" @click="openCreateProject">+ Create Project</UButton>
-        <UButton @click="initializeDefaultProjects" :disabled="isInitializing" color="neutral">
+        <UButton @click="openInitConfirm" :disabled="isInitializing" color="neutral">
           Initialize Defaults
         </UButton>
       </div>
@@ -343,12 +380,23 @@ async function onSubmissionReviewed() {
         <AdminProjectFormModal :open="showProjectModal" @update:open="showProjectModal = $event" :project="editingProject" @saved="onProjectSaved" />
       </ClientOnly>
 
-      <div v-if="!projectsData" class="text-center py-12">
-        <div class="text-gray-500">Loading projects...</div>
+      <div v-if="!projectsData" class="space-y-4">
+        <div v-for="i in 3" :key="i" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+          <div class="h-6 bg-gray-200 rounded w-1/3 mb-3"></div>
+          <div class="space-y-2">
+            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        </div>
       </div>
 
       <div v-else-if="projectsData.projects.length === 0" class="text-center py-12">
-        <div class="text-gray-500 text-lg">No projects yet</div>
+        <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg">
+          <UIcon name="i-heroicons-cube-transparent" class="size-9 text-indigo-400" />
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">No projects yet</h3>
+        <p class="text-gray-600 text-sm mb-4">Create your first project to get started.</p>
+        <UButton color="primary" @click="openCreateProject">+ Create Project</UButton>
       </div>
 
       <div v-else class="grid gap-4">
@@ -366,7 +414,7 @@ async function onSubmissionReviewed() {
               <UButton @click="openEditProject(project)" color="primary" variant="ghost" size="sm">
                 Edit
               </UButton>
-              <UButton @click="deleteProject(project)" color="error" variant="ghost" size="sm">
+              <UButton @click="openDeleteConfirm(project)" color="error" variant="ghost" size="sm">
                 Delete
               </UButton>
             </div>
@@ -379,6 +427,46 @@ async function onSubmissionReviewed() {
     <ClientOnly>
       <AdminSubmissionReviewModal :open="showReviewModal" @update:open="showReviewModal = $event" :submission="selectedSubmission"
         @reviewed="onSubmissionReviewed" />
+    </ClientOnly>
+
+    <!-- Confirmation Modals -->
+    <ClientOnly>
+      <ConfirmModal
+        :open="showDeleteConfirm"
+        @update:open="showDeleteConfirm = $event"
+        title="Delete Project"
+        :message="projectToDelete ? `Are you sure you want to delete \"${projectToDelete.label}\"? This will also delete all associated prompts.` : ''"
+        confirm-text="Delete"
+        variant="danger"
+        @confirmed="deleteProject"
+      />
+      <ConfirmModal
+        :open="showInitConfirm"
+        @update:open="showInitConfirm = $event"
+        title="Initialize Default Projects"
+        message="Initialize default projects? Existing projects will not be affected."
+        confirm-text="Initialize"
+        variant="info"
+        @confirmed="initializeDefaultProjects"
+      />
+      <ConfirmModal
+        :open="showBackfillConfirm"
+        @update:open="showBackfillConfirm = $event"
+        title="Backfill Thumbnails"
+        message="Generate thumbnails for all submissions that don't have them? This may take a while."
+        confirm-text="Backfill"
+        variant="warning"
+        @confirmed="backfillThumbnails"
+      />
+      <ConfirmModal
+        :open="showSeedConfirm"
+        @update:open="showSeedConfirm = $event"
+        title="Seed Test Submissions"
+        message="Seed database with test submissions? This will add sample submissions for testing."
+        confirm-text="Seed"
+        variant="info"
+        @confirmed="seedSubmissions"
+      />
     </ClientOnly>
   </AppLayout>
 </template>

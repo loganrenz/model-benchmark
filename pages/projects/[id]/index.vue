@@ -2,6 +2,7 @@
 import type { Project, Model } from '~/types/prompt'
 
 const route = useRoute()
+const router = useRouter()
 const projectId = route.params.id as string
 
 const { data: project, error, pending } = await useFetch<Project>(
@@ -16,9 +17,9 @@ const breadcrumbs = computed(() => {
   ]
 })
 
-// Filter state
-const searchQuery = ref('')
-const selectedAgent = ref<string>('')
+// Filter state - initialize from URL query params
+const searchQuery = ref(route.query.search as string || '')
+const selectedAgent = ref<string>((route.query.agent as string) || '')
 
 // Get unique agent names from models
 const uniqueAgents = computed(() => {
@@ -61,9 +62,38 @@ const submissionCount = computed(() => project.value?.models?.length || 0)
 const filteredCount = computed(() => filteredModels.value.length)
 const hasFilters = computed(() => searchQuery.value.trim() || selectedAgent.value)
 
+// Update URL when filters change
+function updateUrlFilters() {
+  const query: Record<string, string> = {}
+  if (searchQuery.value.trim()) {
+    query.search = searchQuery.value.trim()
+  }
+  if (selectedAgent.value) {
+    query.agent = selectedAgent.value
+  }
+  
+  router.replace({
+    query: Object.keys(query).length > 0 ? query : {}
+  })
+}
+
+// Debounced search update
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    updateUrlFilters()
+  }, 300) // 300ms debounce
+})
+
+watch(selectedAgent, () => {
+  updateUrlFilters()
+})
+
 function clearFilters() {
   searchQuery.value = ''
   selectedAgent.value = ''
+  updateUrlFilters()
 }
 </script>
 
@@ -77,14 +107,24 @@ function clearFilters() {
         </div>
         <h2 class="text-2xl font-bold text-gray-900">Project not found</h2>
         <p class="mt-3 text-sm text-gray-600">
-          The project you're looking for doesn't exist.
+          The project you're looking for doesn't exist or may have been removed.
         </p>
-        <NuxtLink
-          to="/"
-          class="mt-8 inline-block rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 active:scale-95 transition-all hover:shadow-xl hover:shadow-gray-900/30"
-        >
-          Go back
-        </NuxtLink>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <button 
+            class="rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 active:scale-95 transition-all hover:shadow-xl hover:shadow-gray-900/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            @click="$router.go(0)"
+            aria-label="Retry loading project"
+          >
+            Try again
+          </button>
+          <NuxtLink
+            to="/"
+            class="rounded-2xl bg-white border border-gray-300 px-8 py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            aria-label="Go to home page"
+          >
+            Go home
+          </NuxtLink>
+        </div>
       </div>
     </div>
 
@@ -119,6 +159,7 @@ function clearFilters() {
             type="text"
             placeholder="Search submissions..."
             class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            aria-label="Search submissions"
           />
         </div>
         
@@ -140,9 +181,10 @@ function clearFilters() {
         <button
           v-if="hasFilters"
           @click="clearFilters"
-          class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-lg"
+          aria-label="Clear all filters"
         >
-          <UIcon name="i-heroicons-x-mark" class="size-4" />
+          <UIcon name="i-heroicons-x-mark" class="size-4" aria-hidden="true" />
           Clear
         </button>
         
