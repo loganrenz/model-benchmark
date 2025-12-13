@@ -66,19 +66,19 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="flex h-[100dvh] w-full flex-col bg-neutral-50">
+  <div class="flex min-h-screen h-dvh w-full flex-col bg-gray-50">
     <!-- Error State -->
     <div v-if="error" class="flex flex-1 items-center justify-center p-8">
       <div class="w-full max-w-sm text-center">
-        <div class="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-red-50">
-          <UIcon name="i-heroicons-exclamation-triangle" class="size-7 text-red-500" />
+        <div class="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-red-100">
+          <UIcon name="i-heroicons-exclamation-triangle" class="size-7 text-red-600" />
         </div>
-        <h1 class="text-xl font-semibold text-neutral-900">Failed to load</h1>
-        <p class="mt-2 text-sm text-neutral-500">
+        <h1 class="text-xl font-semibold text-gray-900">Failed to load</h1>
+        <p class="mt-2 text-sm text-gray-500">
           Could not load manifest.json
         </p>
         <button 
-          class="press mt-6 rounded-full bg-neutral-900 px-6 py-2.5 text-sm font-medium text-white"
+          class="mt-6 rounded-full bg-gray-900 px-6 py-2.5 text-sm font-medium text-white active:scale-95 transition-transform"
           @click="$router.go(0)"
         >
           Try again
@@ -89,27 +89,27 @@ watchEffect(() => {
     <!-- Loading State -->
     <div v-else-if="!manifest" class="flex flex-1 items-center justify-center">
       <div class="text-center">
-        <div class="spinner mx-auto mb-4"></div>
-        <p class="text-sm text-neutral-400">Loading...</p>
+        <div class="mx-auto mb-4 size-8 animate-spin rounded-full border-2 border-gray-200 border-t-indigo-600"></div>
+        <p class="text-sm text-gray-500">Loading...</p>
       </div>
     </div>
 
     <!-- Main Content -->
     <template v-else>
       <!-- Header -->
-      <header class="safe-top relative z-30 border-b border-neutral-200/80 bg-white/80 backdrop-blur-xl">
+      <header class="safe-top relative z-30 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
         <div class="flex items-center justify-between px-5 py-4">
           <div class="min-w-0 flex-1">
-            <h1 class="text-lg font-semibold tracking-tight text-neutral-900">
+            <h1 class="text-lg font-semibold tracking-tight text-gray-900">
               Showcase
             </h1>
-            <p v-if="active" class="truncate text-sm text-neutral-500">
+            <p v-if="active" class="truncate text-sm text-gray-500">
               {{ active.label }}
             </p>
           </div>
           
           <button
-            class="press ml-4 flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
+            class="ml-4 flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white active:scale-95 transition-transform"
             @click="drawerOpen = true"
           >
             <UIcon name="i-heroicons-squares-2x2" class="size-4" />
@@ -132,17 +132,17 @@ watchEffect(() => {
         <!-- Empty State -->
         <div v-else class="flex h-full items-center justify-center p-8">
           <div class="max-w-md text-center">
-            <div class="mx-auto mb-8 flex size-20 items-center justify-center rounded-2xl bg-neutral-100">
-              <UIcon name="i-heroicons-cube-transparent" class="size-10 text-neutral-400" />
+            <div class="mx-auto mb-8 flex size-20 items-center justify-center rounded-2xl bg-gray-100">
+              <UIcon name="i-heroicons-cube-transparent" class="size-10 text-gray-400" />
             </div>
-            <h2 class="text-2xl font-semibold tracking-tight text-neutral-900">
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">
               Welcome
             </h2>
-            <p class="mt-3 text-neutral-500">
+            <p class="mt-3 text-gray-500">
               Compare different AI implementations side by side
             </p>
             <button
-              class="press mt-8 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-6 py-3 text-sm font-medium text-white"
+              class="mt-8 inline-flex items-center gap-2 rounded-full bg-gray-900 px-6 py-3 text-sm font-medium text-white active:scale-95 transition-transform"
               @click="drawerOpen = true"
             >
               <span>Browse projects</span>

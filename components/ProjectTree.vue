@@ -42,58 +42,58 @@ function isActive(projectId: string, modelId: string): boolean {
     <div 
       v-for="project in manifest.projects" 
       :key="project.id"
-      class="overflow-hidden rounded-xl border border-neutral-200 bg-white"
+      class="overflow-hidden rounded-xl border border-gray-200 bg-white"
     >
       <!-- Project Header -->
       <button
-        class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-neutral-50"
+        class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
         @click="toggleProject(project.id)"
       >
-        <div class="flex size-9 items-center justify-center rounded-lg bg-neutral-100">
+        <div class="flex size-9 items-center justify-center rounded-lg bg-gray-100">
           <UIcon 
             :name="expandedProjects.has(project.id) ? 'i-heroicons-folder-open' : 'i-heroicons-folder'" 
-            class="size-5 text-neutral-600"
+            class="size-5 text-gray-600"
           />
         </div>
         
         <div class="flex-1">
-          <span class="font-medium text-neutral-900">{{ project.label }}</span>
+          <span class="font-medium text-gray-900">{{ project.label }}</span>
         </div>
         
-        <span class="mr-2 text-xs text-neutral-400">
+        <span class="mr-2 text-xs text-gray-400">
           {{ project.models.length }}
         </span>
         
         <UIcon 
           :name="expandedProjects.has(project.id) ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
-          class="size-4 text-neutral-400"
+          class="size-4 text-gray-400"
         />
       </button>
 
       <!-- Models List -->
-      <div v-if="expandedProjects.has(project.id)" class="border-t border-neutral-100 bg-neutral-50/50">
+      <div v-if="expandedProjects.has(project.id)" class="border-t border-gray-100 bg-gray-50/50">
         <div class="p-2">
           <button
             v-for="model in project.models"
             :key="model.id"
-            class="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all active:scale-[0.98]"
             :class="isActive(project.id, model.id) 
-              ? 'bg-neutral-900 text-white' 
-              : 'text-neutral-700 hover:bg-white'"
+              ? 'bg-gray-900 text-white' 
+              : 'text-gray-700 hover:bg-white'"
             @click="selectModel(project, model)"
           >
             <div 
               class="flex size-8 items-center justify-center rounded-md"
               :class="isActive(project.id, model.id) 
                 ? 'bg-white/10' 
-                : 'bg-neutral-100'"
+                : 'bg-gray-100'"
             >
               <UIcon 
                 name="i-heroicons-cube" 
                 class="size-4"
                 :class="isActive(project.id, model.id) 
                   ? 'text-white' 
-                  : 'text-neutral-500'"
+                  : 'text-gray-500'"
               />
             </div>
             
@@ -115,10 +115,10 @@ function isActive(projectId: string, modelId: string): boolean {
   <!-- Empty State -->
   <div v-else class="flex h-48 items-center justify-center">
     <div class="text-center">
-      <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-xl bg-neutral-100">
-        <UIcon name="i-heroicons-folder-open" class="size-7 text-neutral-400" />
+      <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-xl bg-gray-100">
+        <UIcon name="i-heroicons-folder-open" class="size-7 text-gray-400" />
       </div>
-      <p class="text-sm text-neutral-500">No projects</p>
+      <p class="text-sm text-gray-500">No projects</p>
     </div>
   </div>
 </template>

@@ -50,13 +50,12 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
 
   <!-- Drawer -->
   <div
-    class="fixed inset-x-0 bottom-0 z-50 transition-transform duration-500"
+    class="fixed inset-x-0 bottom-0 z-50 transition-transform duration-500 ease-out"
     :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-4rem)]'"
-    :style="{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }"
   >
     <div 
-      class="mx-auto flex max-w-2xl flex-col rounded-t-2xl border border-neutral-200 bg-white shadow-2xl"
-      style="height: 80dvh; max-height: 80vh;"
+      class="mx-auto flex max-w-2xl flex-col rounded-t-2xl border border-gray-200 bg-white shadow-2xl"
+      style="height: 80vh;"
     >
       <!-- Handle -->
       <button
@@ -64,14 +63,14 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
         @click="isOpen = !isOpen"
       >
         <div class="flex items-center gap-4">
-          <div class="h-1 w-8 rounded-full bg-neutral-300"></div>
-          <span class="text-base font-semibold text-neutral-900">Projects</span>
-          <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">
+          <div class="h-1 w-8 rounded-full bg-gray-300"></div>
+          <span class="text-base font-semibold text-gray-900">Projects</span>
+          <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
             {{ manifest.projects.length }}
           </span>
         </div>
         
-        <div class="flex items-center gap-2 text-neutral-400">
+        <div class="flex items-center gap-2 text-gray-400">
           <span class="hidden text-xs sm:inline">{{ isOpen ? 'Close' : 'Open' }}</span>
           <UIcon
             :name="isOpen ? 'i-heroicons-chevron-down' : 'i-heroicons-chevron-up'"
@@ -81,7 +80,7 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
       </button>
 
       <!-- Divider -->
-      <div class="h-px bg-neutral-100"></div>
+      <div class="h-px bg-gray-100"></div>
 
       <!-- Content -->
       <div class="safe-bottom flex-1 overflow-y-auto p-4">
@@ -93,7 +92,7 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
         />
         
         <div v-else class="flex h-48 items-center justify-center">
-          <div class="spinner"></div>
+          <div class="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-indigo-600"></div>
         </div>
       </div>
     </div>
