@@ -21,6 +21,9 @@
           "id": "agent-gemini-3-pro-preview",
           "label": "Gemini 3 Pro Preview",
           "file": "agent-gemini-3-pro-preview/index.html"
+          "id": "agent-gpt-5.2",
+          "label": "GPT-5.2",
+          "file": "agent-gpt-5.2/index.html"
         }
       ]
     },
