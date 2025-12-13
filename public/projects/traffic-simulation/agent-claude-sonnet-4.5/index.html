@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Simulation - Claude Sonnet 4.5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            background: #87CEEB;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Traffic light configuration
+        const trafficLight = {
+            x: 600,
+            y: 250,
+            width: 60,
+            height: 140,
+            state: 'green', // 'red' or 'green'
+            timer: 0,
+            greenDuration: 4000, // 4 seconds
+            redDuration: 3000,   // 3 seconds
+            stopLineX: 550
+        };
+        
+        // Car class
+        class Car {
+            constructor(x, y, speed, color, width = 60, height = 35) {
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+                this.baseSpeed = speed;
+                this.color = color;
+                this.width = width;
+                this.height = height;
+            }
+            
+            update(deltaTime) {
+                // Check if car should stop at red light
+                const carFront = this.x + this.width;
+                const distanceToLight = trafficLight.stopLineX - carFront;
+                
+                if (trafficLight.state === 'red' && distanceToLight > -10 && distanceToLight < 100) {
+                    // Smooth deceleration
+                    if (distanceToLight > 0) {
+                        this.speed = Math.min(this.baseSpeed, distanceToLight / 10);
+                    } else {
+                        this.speed = 0;
+                    }
+                } else {
+                    // Resume normal speed
+                    this.speed = this.baseSpeed;
+                }
+                
+                this.x += this.speed * (deltaTime / 16.67); // Normalize to 60fps
+                
+                // Reset position when off screen
+                if (this.x > canvas.width + 50) {
+                    this.x = -this.width - Math.random() * 200;
+                }
+            }
+            
+            draw() {
+                // Car body
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Car roof
+                ctx.fillStyle = this.adjustBrightness(this.color, -20);
+                ctx.beginPath();
+                ctx.moveTo(this.x + 15, this.y);
+                ctx.lineTo(this.x + 20, this.y - 15);
+                ctx.lineTo(this.x + 45, this.y - 15);
+                ctx.lineTo(this.x + 50, this.y);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Windows
+                ctx.fillStyle = 'rgba(135, 206, 250, 0.7)';
+                ctx.fillRect(this.x + 22, this.y - 12, 10, 10);
+                ctx.fillRect(this.x + 38, this.y - 12, 10, 10);
+                
+                // Wheels
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(this.x + 15, this.y + this.height, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + this.width - 15, this.y + this.height, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Headlights
+                ctx.fillStyle = '#FFE600';
+                ctx.fillRect(this.x + this.width - 2, this.y + 8, 3, 8);
+            }
+            
+            adjustBrightness(color, amount) {
+                const hex = color.replace('#', '');
+                const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+                const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+                const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+            }
+        }
+        
+        // Create cars with different colors and speeds
+        const cars = [
+            new Car(-100, 320, 2.5, '#FF6B6B'),
+            new Car(-250, 320, 2.2, '#4ECDC4'),
+            new Car(-450, 320, 2.8, '#FFE66D'),
+            new Car(-600, 320, 2.0, '#95E1D3'),
+            new Car(-800, 320, 2.6, '#F38181')
+        ];
+        
+        let lastTime = Date.now();
+        
+        function updateTrafficLight() {
+            const currentTime = Date.now();
+            const elapsed = currentTime - trafficLight.timer;
+            
+            if (trafficLight.state === 'green' && elapsed > trafficLight.greenDuration) {
+                trafficLight.state = 'red';
+                trafficLight.timer = currentTime;
+            } else if (trafficLight.state === 'red' && elapsed > trafficLight.redDuration) {
+                trafficLight.state = 'green';
+                trafficLight.timer = currentTime;
+            }
+        }
+        
+        function drawRoad() {
+            // Road
+            ctx.fillStyle = '#555';
+            ctx.fillRect(0, 300, canvas.width, 120);
+            
+            // Road lines
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([20, 15]);
+            ctx.beginPath();
+            ctx.moveTo(0, 360);
+            ctx.lineTo(canvas.width, 360);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Sidewalk
+            ctx.fillStyle = '#888';
+            ctx.fillRect(0, 420, canvas.width, 30);
+            
+            // Grass
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(0, 450, canvas.width, 150);
+        }
+        
+        function drawTrafficLight() {
+            const { x, y, width, height, state } = trafficLight;
+            
+            // Pole
+            ctx.fillStyle = '#666';
+            ctx.fillRect(x + width/2 - 5, y + height, 10, 100);
+            
+            // Traffic light box
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x, y, width, height);
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, width, height);
+            
+            // Red light
+            ctx.fillStyle = state === 'red' ? '#FF0000' : '#660000';
+            ctx.beginPath();
+            ctx.arc(x + width/2, y + 35, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add glow effect for active light
+            if (state === 'red') {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#FF0000';
+                ctx.fillStyle = '#FF0000';
+                ctx.beginPath();
+                ctx.arc(x + width/2, y + 35, 20, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            
+            // Green light
+            ctx.fillStyle = state === 'green' ? '#00FF00' : '#006600';
+            ctx.beginPath();
+            ctx.arc(x + width/2, y + 105, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add glow effect for active light
+            if (state === 'green') {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#00FF00';
+                ctx.fillStyle = '#00FF00';
+                ctx.beginPath();
+                ctx.arc(x + width/2, y + 105, 20, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            
+            // Stop line
+            if (state === 'red') {
+                ctx.strokeStyle = '#FFF';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(trafficLight.stopLineX, 300);
+                ctx.lineTo(trafficLight.stopLineX, 420);
+                ctx.stroke();
+            }
+        }
+        
+        function drawBuildings() {
+            // Background buildings
+            const buildings = [
+                { x: 50, y: 150, width: 80, height: 150, color: '#8B9DC3' },
+                { x: 150, y: 180, width: 100, height: 120, color: '#A7B5D8' },
+                { x: 270, y: 160, width: 70, height: 140, color: '#9CADC7' },
+                { x: 360, y: 140, width: 90, height: 160, color: '#8899BB' }
+            ];
+            
+            buildings.forEach(building => {
+                // Building body
+                ctx.fillStyle = building.color;
+                ctx.fillRect(building.x, building.y, building.width, building.height);
+                
+                // Windows
+                ctx.fillStyle = '#F0E68C';
+                const rows = Math.floor(building.height / 20);
+                const cols = Math.floor(building.width / 20);
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        if (Math.random() > 0.3) {
+                            ctx.fillRect(
+                                building.x + col * 20 + 5,
+                                building.y + row * 20 + 5,
+                                10,
+                                10
+                            );
+                        }
+                    }
+                }
+            });
+        }
+        
+        function drawSun() {
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(700, 80, 40, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Sun rays
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 8; i++) {
+                const angle = (Math.PI * 2 / 8) * i;
+                const startX = 700 + Math.cos(angle) * 50;
+                const startY = 80 + Math.sin(angle) * 50;
+                const endX = 700 + Math.cos(angle) * 70;
+                const endY = 80 + Math.sin(angle) * 70;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+        }
+        
+        function animate() {
+            const currentTime = Date.now();
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw scene
+            drawSun();
+            drawBuildings();
+            drawRoad();
+            drawTrafficLight();
+            
+            // Update and draw cars
+            cars.forEach(car => {
+                car.update(deltaTime);
+                car.draw();
+            });
+            
+            // Update traffic light
+            updateTrafficLight();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Initialize and start animation
+        trafficLight.timer = Date.now();
+        animate();
+    </script>
+</body>
+</html>

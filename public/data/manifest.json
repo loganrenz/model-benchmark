@@ -36,6 +36,11 @@
           "id": "agent-composer",
           "label": "Composer",
           "file": "agent-composer/index.html"
+        },
+        {
+          "id": "agent-claude-sonnet-4.5",
+          "label": "Claude Sonnet 4.5",
+          "file": "agent-claude-sonnet-4.5/index.html"
         }
       ]
     },
@@ -110,6 +115,11 @@
           "id": "agent-composer",
           "label": "Composer",
           "file": "agent-composer/index.html"
+        },
+        {
+          "id": "agent-claude-sonnet-4.5",
+          "label": "Claude Sonnet 4.5",
+          "file": "agent-claude-sonnet-4.5/index.html"
         }
       ]
     }
