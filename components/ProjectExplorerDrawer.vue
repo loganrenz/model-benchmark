@@ -43,10 +43,10 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
 
   <!-- Drawer -->
   <div
-    class="fixed inset-x-0 bottom-0 z-50 transition-transform duration-300"
+    class="fixed inset-x-0 bottom-0 z-50 max-h-screen transition-transform duration-300 md:max-h-[90vh]"
     :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-5rem)]'"
   >
-    <div class="mx-auto h-screen max-w-3xl rounded-t-2xl border border-gray-200 bg-white shadow-xl md:h-[85vh]">
+    <div class="mx-auto flex max-w-3xl flex-col rounded-t-2xl border border-gray-200 bg-white shadow-xl" style="height: 90vh; max-height: 100vh;">
       <!-- Handle -->
       <button
         class="flex w-full items-center justify-between border-b-2 border-gray-300 bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-5 hover:from-blue-100 hover:to-purple-100"
@@ -63,7 +63,7 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
       </button>
 
       <!-- Content -->
-      <div class="h-[calc(100%-5rem)] overflow-y-auto border-t border-gray-200 p-4">
+      <div class="flex-1 overflow-y-auto border-t border-gray-200 p-4">
         <ProjectTree
           :manifest="manifest"
           :active-key="activeKey"
