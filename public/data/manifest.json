@@ -16,6 +16,11 @@
           "id": "claude-sonnet-45",
           "label": "Claude Sonnet 4.5",
           "file": "claude-sonnet-45/index.html"
+        },
+        {
+          "id": "agent-composer",
+          "label": "Composer",
+          "file": "agent-composer/index.html"
         }
       ]
     },
