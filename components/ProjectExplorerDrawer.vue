@@ -33,42 +33,44 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
 
 <template>
   <!-- Overlay -->
-  <Teleport to="body">
-    <div
-      v-if="isOpen"
-      class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-      @click="isOpen = false"
-    />
-  </Teleport>
+  <div
+    v-if="isOpen"
+    class="fixed inset-0 z-40 bg-black/30"
+    @click="isOpen = false"
+  />
 
   <!-- Drawer -->
   <div
-    class="fixed inset-x-0 bottom-0 z-50 max-h-screen transition-transform duration-300 md:max-h-[90vh]"
-    :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-5rem)]'"
+    class="fixed inset-x-0 bottom-0 z-50 transition-transform duration-300"
+    :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-4rem)]'"
   >
-    <div class="mx-auto flex max-w-3xl flex-col rounded-t-2xl border border-gray-200 bg-white shadow-xl" style="height: 90vh; max-height: 100vh;">
+    <div class="mx-auto flex max-w-3xl flex-col rounded-t-2xl border border-gray-200 bg-white shadow-xl" style="height: 80vh;">
       <!-- Handle -->
       <button
-        class="flex w-full items-center justify-between border-b-2 border-gray-300 bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-5 hover:from-blue-100 hover:to-purple-100"
+        class="flex w-full items-center justify-between border-b border-gray-200 px-4 py-3 hover:bg-gray-50"
         @click="isOpen = !isOpen"
       >
-        <div class="flex items-center gap-3">
-          <div class="h-1.5 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500" />
-          <span class="text-base font-bold text-gray-900">Projects</span>
+        <div class="flex items-center gap-2">
+          <div class="h-1 w-10 rounded-full bg-gray-300" />
+          <span class="text-sm font-medium">Projects</span>
         </div>
         <UIcon
           :name="isOpen ? 'i-heroicons-chevron-down' : 'i-heroicons-chevron-up'"
-          class="h-6 w-6 text-gray-700"
+          class="size-5"
         />
       </button>
 
       <!-- Content -->
-      <div class="flex-1 overflow-y-auto border-t border-gray-200 p-4">
+      <div class="flex-1 overflow-y-auto p-4">
         <ProjectTree
+          v-if="manifest"
           :manifest="manifest"
           :active-key="activeKey"
           @select="handleSelect"
         />
+        <div v-else class="p-8 text-center text-sm text-gray-500">
+          Loading...
+        </div>
       </div>
     </div>
   </div>

@@ -89,20 +89,20 @@ watchEffect(() => {
     <!-- Main Content -->
     <div v-else class="flex h-full flex-col">
       <!-- Iframe Viewer -->
-      <div class="flex-1 pb-[10vh]">
+      <div class="flex-1 pb-20">
         <iframe
           v-if="active"
           :key="active.src"
           :src="active.src"
           :title="active.label"
-          class="h-full w-full border-0"
+          class="size-full border-0"
         />
         <div v-else class="flex h-full items-center justify-center">
           <button
-            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+            class="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
             @click="drawerOpen = true"
           >
-            Select a Model
+            Select a Project
           </button>
         </div>
       </div>
