@@ -36,7 +36,7 @@ const isBackfilling = ref(false)
 const isSeeding = ref(false)
 
 // Submission functions
-async function handleReviewSubmission(status: 'approved' | 'rejected') {
+async function handleReviewSubmission(status: 'approved' | 'rejected', thumbnail?: string) {
   if (!selectedSubmission.value) return
 
   isReviewing.value = true
@@ -45,7 +45,8 @@ async function handleReviewSubmission(status: 'approved' | 'rejected') {
       method: 'PUT',
       body: {
         status,
-        reviewerNotes: reviewerNotes.value || undefined
+        reviewerNotes: reviewerNotes.value || undefined,
+        thumbnail: thumbnail || undefined
       }
     })
 

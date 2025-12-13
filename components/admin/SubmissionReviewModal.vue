@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Submission } from '~/types/submission'
+import html2canvas from 'html2canvas'
 
 interface Props {
   submission: Submission | null
@@ -11,7 +12,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   close: []
-  review: [status: 'approved' | 'rejected']
+  review: [status: 'approved' | 'rejected', thumbnail?: string]
   'update:reviewerNotes': [value: string]
 }>()
 
@@ -20,9 +21,56 @@ const localNotes = computed({
   set: (value) => emit('update:reviewerNotes', value)
 })
 
+const iframeRef = ref<HTMLIFrameElement | null>(null)
+const isGeneratingThumbnail = ref(false)
+const thumbnailDataUrl = ref<string | null>(null)
+
 function formatDate(dateString: string | undefined) {
   if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleString()
+}
+
+async function generateThumbnail() {
+  if (!iframeRef.value?.contentWindow?.document.body) {
+    console.error('Iframe not loaded')
+    return null
+  }
+
+  isGeneratingThumbnail.value = true
+  
+  try {
+    // Wait a moment for animations to settle
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Capture the iframe content
+    const canvas = await html2canvas(iframeRef.value.contentWindow.document.body, {
+      width: 800,
+      height: 600,
+      scale: 1,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null
+    })
+    
+    // Convert to JPEG data URL
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+    thumbnailDataUrl.value = dataUrl
+    return dataUrl
+  } catch (error) {
+    console.error('Failed to generate thumbnail:', error)
+    return null
+  } finally {
+    isGeneratingThumbnail.value = false
+  }
+}
+
+async function handleReview(status: 'approved' | 'rejected') {
+  // Generate thumbnail when approving
+  let thumbnail: string | undefined
+  if (status === 'approved') {
+    thumbnail = await generateThumbnail() || undefined
+  }
+  emit('review', status, thumbnail)
 }
 </script>
 
@@ -71,13 +119,29 @@ function formatDate(dateString: string | undefined) {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-gray-700">Preview</label>
+            <UButton
+              size="xs"
+              color="gray"
+              variant="outline"
+              :loading="isGeneratingThumbnail"
+              @click="generateThumbnail"
+            >
+              {{ thumbnailDataUrl ? 'Regenerate' : 'Generate' }} Thumbnail
+            </UButton>
+          </div>
           <div class="border border-gray-300 rounded-lg overflow-hidden" style="height: 600px;">
             <iframe
+              ref="iframeRef"
               :srcdoc="submission.htmlContent"
               class="w-full h-full"
               title="Submission Preview"
             />
+          </div>
+          <div v-if="thumbnailDataUrl" class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Generated Thumbnail</label>
+            <img :src="thumbnailDataUrl" alt="Thumbnail preview" class="border border-gray-300 rounded" style="max-width: 200px;" />
           </div>
         </div>
       </div>
@@ -86,22 +150,24 @@ function formatDate(dateString: string | undefined) {
         <div class="flex justify-end gap-3">
           <UButton
             color="green"
-            :disabled="isReviewing"
-            @click="emit('review', 'approved')"
+            :disabled="isReviewing || isGeneratingThumbnail"
+            :loading="isReviewing"
+            @click="handleReview('approved')"
           >
             Approve
           </UButton>
           <UButton
             color="red"
-            :disabled="isReviewing"
-            @click="emit('review', 'rejected')"
+            :disabled="isReviewing || isGeneratingThumbnail"
+            :loading="isReviewing"
+            @click="handleReview('rejected')"
           >
             Reject
           </UButton>
           <UButton
             color="gray"
             variant="ghost"
-            :disabled="isReviewing"
+            :disabled="isReviewing || isGeneratingThumbnail"
             @click="emit('close')"
           >
             Cancel

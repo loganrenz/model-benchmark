@@ -17,6 +17,7 @@ The application uses Cloudflare D1 (SQLite-based database) which is only availab
 ### 1. Create D1 Database
 
 The database is already configured in `wrangler.toml`:
+
 - Database name: `model-benchmark-db`
 - Database ID: `6ac70ed1-1031-4f67-830d-4157c1d6b942`
 
@@ -54,7 +55,7 @@ Or use the Cloudflare dashboard to run the migrations manually.
 4. Select your repository
 5. Configure build settings:
    - **Build command**: `npm run build`
-   - **Build output directory**: `.output/public`
+   - **Build output directory**: `dist`
    - **Root directory**: `/`
 6. Add environment bindings:
    - Go to **Settings** → **Functions** → **D1 database bindings**
@@ -68,7 +69,7 @@ Or use the Cloudflare dashboard to run the migrations manually.
 npm run build
 
 # Deploy to Cloudflare Pages
-wrangler pages deploy .output/public --project-name=model-benchmark
+wrangler pages deploy dist --project-name=model-benchmark
 ```
 
 ### 4. Seed Initial Data (Optional)
@@ -82,8 +83,8 @@ After deployment, you can seed the database with initial projects:
 
 ## Environment Variables
 
-
 The application doesn't require environment variables for basic operation. All configuration is done through:
+
 - `wrangler.toml` for Cloudflare settings
 - `nuxt.config.ts` for application settings
 
@@ -109,6 +110,7 @@ If you see database errors in production:
 ### Build Failures
 
 Common issues:
+
 - **Module not found**: Run `npm install` locally first
 - **Type errors**: Run `npm run build` locally to check for TypeScript errors
 - **Memory issues**: Increase Node memory: `NODE_OPTIONS=--max-old-space-size=4096 npm run build`
@@ -116,9 +118,21 @@ Common issues:
 ### 404 Errors
 
 If the site shows 404:
-1. Check that build output directory is `.output/public`
+
+1. Check that build output directory is `dist`
 2. Verify the build completed successfully
 3. Check Cloudflare Pages deployment logs
+
+### “Workers-specific command in a Pages project”
+
+If you see:
+
+- `It looks like you've run a Workers-specific command in a Pages project.`
+
+Then you’re running the wrong command.
+
+- For **Pages**, use `wrangler pages deploy dist` (CLI deploy)
+- If you’re deploying via the **Cloudflare Pages dashboard (Connect Git)**, you generally should **not** run any `wrangler ... deploy` as a custom deploy step — Pages will deploy automatically after the build. Just set the build output directory to `dist` and configure the D1 binding (`DB`) in Pages settings.
 
 ## Vercel Deployment (Not Recommended)
 
@@ -130,4 +144,3 @@ This application is **not compatible with Vercel** because it uses Cloudflare D1
 4. Update all database queries to work with the new database
 
 This would be a significant refactoring effort.
-
