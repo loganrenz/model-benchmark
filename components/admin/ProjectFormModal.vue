@@ -3,13 +3,18 @@ import type { Project } from '~/types/prompt'
 
 const props = defineProps<{
   project?: Project | null
+  open: boolean
 }>()
 
 const emit = defineEmits<{
   saved: []
+  'update:open': [value: boolean]
 }>()
 
-const open = defineModel<boolean>('open', { default: false })
+const isOpen = computed({
+  get: () => props.open,
+  set: (value) => emit('update:open', value)
+})
 
 const form = ref({
   id: '',
@@ -20,8 +25,8 @@ const isSaving = ref(false)
 const { showSuccess, showError } = useNotifications()
 
 // Reset form when modal opens
-watch(open, (isOpen) => {
-  if (isOpen) {
+watch(() => props.open, (isOpenValue) => {
+  if (isOpenValue) {
     if (props.project) {
       form.value = {
         id: props.project.id,
@@ -57,7 +62,7 @@ async function save() {
       })
       showSuccess('Project created successfully')
     }
-    open.value = false
+    isOpen.value = false
     emit('saved')
   } catch (error: any) {
     showError(error.data?.statusMessage || 'Failed to save project')
@@ -65,10 +70,14 @@ async function save() {
     isSaving.value = false
   }
 }
+
+function closeModal() {
+  isOpen.value = false
+}
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="project ? 'Edit Project' : 'Create Project'" :ui="{ footer: 'justify-end' }">
+  <UModal v-model:open="isOpen" :title="project ? 'Edit Project' : 'Create Project'" :ui="{ footer: 'justify-end' }">
     <template #body>
       <div class="space-y-4">
         <div>
@@ -97,7 +106,7 @@ async function save() {
     </template>
 
     <template #footer>
-      <UButton color="neutral" variant="outline" @click="open = false">Cancel</UButton>
+      <UButton color="neutral" variant="outline" @click="closeModal">Cancel</UButton>
       <UButton color="primary" :disabled="!canSave" :loading="isSaving" @click="save">
         {{ project ? 'Update' : 'Create' }}
       </UButton>
