@@ -1,12 +1,22 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   
+  devServer: {
+    port: 2029
+  },
+  
   modules: ['@nuxt/ui'],
   
   css: ['~/assets/css/tailwind.css'],
   
   nitro: {
-    preset: 'vercel'
+    preset: 'cloudflare-pages',
+    experimental: {
+      wasm: true
+    },
+    d1: {
+      databases: ['DB']
+    }
   },
   
   colorMode: {

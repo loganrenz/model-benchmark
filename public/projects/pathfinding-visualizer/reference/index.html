@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinding Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #16213e;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pathCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('pathCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const GRID_SIZE = 40;
+        const CELL_SIZE = 15;
+        canvas.width = GRID_SIZE * CELL_SIZE;
+        canvas.height = GRID_SIZE * CELL_SIZE;
+        
+        const grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+        
+        // 0 = empty, 1 = wall, 2 = start, 3 = end, 4 = explored, 5 = path
+        const start = { x: 2, y: 2 };
+        const end = { x: GRID_SIZE - 3, y: GRID_SIZE - 3 };
+        
+        grid[start.x][start.y] = 2;
+        grid[end.x][end.y] = 3;
+        
+        // Generate random walls
+        for (let i = 0; i < GRID_SIZE * GRID_SIZE * 0.25; i++) {
+            const x = Math.floor(Math.random() * GRID_SIZE);
+            const y = Math.floor(Math.random() * GRID_SIZE);
+            if (grid[x][y] === 0) {
+                grid[x][y] = 1;
+            }
+        }
+        
+        function heuristic(a, b) {
+            return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+        }
+        
+        function getNeighbors(node) {
+            const neighbors = [];
+            const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+            
+            for (const [dx, dy] of dirs) {
+                const x = node.x + dx;
+                const y = node.y + dy;
+                if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && grid[x][y] !== 1) {
+                    neighbors.push({ x, y });
+                }
+            }
+            return neighbors;
+        }
+        
+        async function aStar() {
+            const openSet = [start];
+            const cameFrom = new Map();
+            const gScore = new Map();
+            const fScore = new Map();
+            
+            gScore.set(`${start.x},${start.y}`, 0);
+            fScore.set(`${start.x},${start.y}`, heuristic(start, end));
+            
+            while (openSet.length > 0) {
+                openSet.sort((a, b) => {
+                    const aScore = fScore.get(`${a.x},${a.y}`) || Infinity;
+                    const bScore = fScore.get(`${b.x},${b.y}`) || Infinity;
+                    return aScore - bScore;
+                });
+                
+                const current = openSet.shift();
+                
+                if (current.x === end.x && current.y === end.y) {
+                    // Reconstruct path
+                    const path = [];
+                    let temp = current;
+                    while (cameFrom.has(`${temp.x},${temp.y}`)) {
+                        path.unshift(temp);
+                        temp = cameFrom.get(`${temp.x},${temp.y}`);
+                    }
+                    
+                    for (const node of path) {
+                        if (grid[node.x][node.y] === 4) {
+                            grid[node.x][node.y] = 5;
+                        }
+                    }
+                    draw();
+                    return;
+                }
+                
+                if (grid[current.x][current.y] === 0) {
+                    grid[current.x][current.y] = 4;
+                }
+                
+                draw();
+                await new Promise(resolve => setTimeout(resolve, 20));
+                
+                for (const neighbor of getNeighbors(current)) {
+                    const tentativeGScore = (gScore.get(`${current.x},${current.y}`) || Infinity) + 1;
+                    const neighborKey = `${neighbor.x},${neighbor.y}`;
+                    
+                    if (tentativeGScore < (gScore.get(neighborKey) || Infinity)) {
+                        cameFrom.set(neighborKey, current);
+                        gScore.set(neighborKey, tentativeGScore);
+                        fScore.set(neighborKey, tentativeGScore + heuristic(neighbor, end));
+                        
+                        if (!openSet.some(n => n.x === neighbor.x && n.y === neighbor.y)) {
+                            openSet.push(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function draw() {
+            const colors = {
+                0: '#0f3460',  // empty
+                1: '#16213e',  // wall
+                2: '#00ff00',  // start
+                3: '#ff0000',  // end
+                4: '#4a90e2',  // explored
+                5: '#ffff00'   // path
+            };
+            
+            for (let x = 0; x < GRID_SIZE; x++) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    ctx.fillStyle = colors[grid[x][y]];
+                    ctx.fillRect(
+                        x * CELL_SIZE + 1,
+                        y * CELL_SIZE + 1,
+                        CELL_SIZE - 2,
+                        CELL_SIZE - 2
+                    );
+                }
+            }
+        }
+        
+        draw();
+        setTimeout(() => aStar(), 500);
+    </script>
+</body>
+</html>
+

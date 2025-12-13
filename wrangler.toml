@@ -1,0 +1,9 @@
+name = "model-benchmark"
+compatibility_date = "2025-07-15"
+pages_build_output_dir = ".output/public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "model-benchmark-db"
+database_id = "6ac70ed1-1031-4f67-830d-4157c1d6b942"
+
