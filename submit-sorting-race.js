@@ -11,6 +11,7 @@ const submission = {
   htmlContent: htmlContent
 };
 
+
 console.log('Submitting Sorting Algorithm Race implementation...');
 console.log('Project ID:', submission.projectId);
 console.log('Agent Name:', submission.agentName);
