@@ -1,0 +1,14 @@
+name = "model-benchmark"
+compatibility_date = "2025-07-15"
+pages_build_output_dir = "dist"
+
+[build]
+command = "npm run build"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "model-benchmark-db"
+database_id = "6ac70ed1-1031-4f67-830d-4157c1d6b942"
+
+# Environment variables (set these in Cloudflare Pages dashboard > Settings > Environment variables)
+# NUXT_SCREENSHOTONE_API_KEY = "your-api-key-here"
