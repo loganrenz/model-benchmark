@@ -16,6 +16,11 @@
           "id": "claude-sonnet-45",
           "label": "Claude Sonnet 4.5",
           "file": "claude-sonnet-45/index.html"
+        },
+        {
+          "id": "agent-gpt-5.2",
+          "label": "GPT-5.2",
+          "file": "agent-gpt-5.2/index.html"
         }
       ]
     },

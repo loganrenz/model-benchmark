@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Traffic Simulation (agent-gpt-5.2)</title>
+  <style>
+    :root {
+      --bg0: #070a12;
+      --bg1: #0b1020;
+      --fg: #e8eefc;
+      --muted: rgba(232, 238, 252, 0.65);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 700px at 65% 0%, #152043 0%, var(--bg0) 55%, #04050a 100%);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      overflow: hidden;
+    }
+
+    .wrap {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0));
+      user-select: none;
+    }
+
+    header .title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    header .hint {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    #c {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      box-shadow: 0 0 16px rgba(0,0,0,0.35);
+    }
+
+    .dot.red { background: #ff3b4d; box-shadow: 0 0 18px rgba(255, 59, 77, 0.55); }
+    .dot.green { background: #26df7f; box-shadow: 0 0 18px rgba(38, 223, 127, 0.55); }
+
+    noscript {
+      padding: 12px;
+      color: var(--fg);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">Traffic Simulation</div>
+      <div class="badge" id="badge">
+        <span class="dot" id="dot"></span>
+        <span id="label">Light</span>
+      </div>
+      <div class="hint">Cars stop on red, flow on green (3.5s phases)</div>
+    </header>
+    <canvas id="c" aria-label="Traffic simulation canvas"></canvas>
+  </div>
+
+  <noscript>This demo requires JavaScript to run.</noscript>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('c');
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const dot = document.getElementById('dot');
+      const label = document.getElementById('label');
+
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+
+      function mulberry32(seed) {
+        let a = seed >>> 0;
+        return function () {
+          a |= 0; a = (a + 0x6D2B79F5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      const rand = mulberry32((Date.now() ^ 0x9e3779b9) >>> 0);
+
+      // Simulation state
+      const state = {
+        t: 0,
+        lastMs: performance.now(),
+        cars: [],
+        light: {
+          phaseSec: 3.5,  // each red/green lasts 3.5s
+          offsetSec: 0.2,
+          isGreen: true,
+        },
+        view: {
+          w: 0,
+          h: 0,
+          dpr: 1,
+          scale: 1,
+          roadY: 0,
+          roadH: 0,
+          laneY: 0,
+          lightX: 0,
+          stopLineX: 0,
+        },
+      };
+
+      function resize() {
+        const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.max(320, Math.floor(rect.width));
+        const h = Math.max(220, Math.floor(rect.height));
+
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        state.view.w = w;
+        state.view.h = h;
+        state.view.dpr = dpr;
+        state.view.scale = clamp(Math.min(w / 900, h / 520), 0.75, 1.2);
+
+        const s = state.view.scale;
+        state.view.roadH = Math.floor(140 * s);
+        state.view.roadY = Math.floor(h * 0.60 - state.view.roadH * 0.5);
+        state.view.laneY = state.view.roadY + state.view.roadH * 0.5;
+
+        state.view.lightX = Math.floor(w * 0.72);
+        state.view.stopLineX = state.view.lightX - Math.floor(38 * s);
+      }
+
+      window.addEventListener('resize', resize, { passive: true });
+      resize();
+
+      function pickCarColor() {
+        const palette = [
+          '#ff4d6d', '#ffb703', '#48cae4', '#4cc9f0', '#b5179e',
+          '#2dd4bf', '#a3e635', '#fb7185', '#60a5fa', '#f59e0b',
+        ];
+        return palette[Math.floor(rand() * palette.length)];
+      }
+
+      function spawnCarIfNeeded() {
+        const { w, scale, laneY, roadH } = state.view;
+        const carW = Math.floor(56 * scale);
+        const carH = Math.floor(26 * scale);
+        const bumper = Math.floor(18 * scale);
+        const startX = -carW - 20;
+
+        // Only spawn if the start region is clear.
+        let nearest = Infinity;
+        for (const c of state.cars) {
+          nearest = Math.min(nearest, c.x - c.length * 0.5);
+        }
+
+        if (nearest > startX + carW + bumper) {
+          // probabilistic spacing
+          if (rand() < 0.55) {
+            const baseSpeed = (0.22 + rand() * 0.06) * w; // px/s relative to viewport
+            state.cars.push({
+              id: (Math.random() * 1e9) | 0,
+              x: startX,
+              v: baseSpeed * (0.4 + rand() * 0.1),
+              targetV: baseSpeed,
+              length: carW,
+              height: carH,
+              color: pickCarColor(),
+              laneY,
+              wheelR: Math.max(3, Math.floor(5 * scale)),
+              wobble: (rand() * 2 - 1) * 0.8,
+              tint: rand() * 0.18,
+            });
+          }
+        }
+
+        // Keep at least a few cars around
+        if (state.cars.length < 5 && rand() < 0.25) {
+          const baseSpeed = (0.23 + rand() * 0.06) * w;
+          state.cars.push({
+            id: (Math.random() * 1e9) | 0,
+            x: startX - rand() * w * 0.15,
+            v: baseSpeed * 0.55,
+            targetV: baseSpeed,
+            length: carW,
+            height: carH,
+            color: pickCarColor(),
+            laneY,
+            wheelR: Math.max(3, Math.floor(5 * scale)),
+            wobble: (rand() * 2 - 1) * 0.8,
+            tint: rand() * 0.18,
+          });
+        }
+
+        // Remove offscreen cars
+        const endX = w + carW + 30;
+        state.cars = state.cars.filter(c => c.x < endX);
+      }
+
+      function updateLight(t) {
+        const { phaseSec, offsetSec } = state.light;
+        const total = phaseSec * 2;
+        const local = (t + offsetSec) % total;
+        state.light.isGreen = local >= phaseSec;
+
+        if (state.light.isGreen) {
+          dot.className = 'dot green';
+          label.textContent = 'Green';
+        } else {
+          dot.className = 'dot red';
+          label.textContent = 'Red';
+        }
+      }
+
+      function getLeadCarAhead(car) {
+        // Find nearest car ahead in the same lane
+        let best = null;
+        let bestDx = Infinity;
+        for (const other of state.cars) {
+          if (other === car) continue;
+          const dx = (other.x - other.length * 0.5) - (car.x + car.length * 0.5);
+          if (dx > 0 && dx < bestDx) {
+            bestDx = dx;
+            best = other;
+          }
+        }
+        return best;
+      }
+
+      function step(dt) {
+        const { w, stopLineX, scale } = state.view;
+        const isGreen = state.light.isGreen;
+
+        // World parameters (scaled to viewport)
+        const maxAccel = (0.85 * w) * 0.10; // px/s^2
+        const maxDecel = (0.95 * w) * 0.16; // px/s^2
+        const minGap = Math.floor(16 * scale);
+        const buffer = Math.floor(10 * scale);
+
+        // Sort by x so interaction is stable
+        state.cars.sort((a, b) => a.x - b.x);
+
+        for (const car of state.cars) {
+          // Determine the furthest x the car may reach this frame.
+          let limitFrontX = Infinity;
+
+          // Stop at the red light.
+          if (!isGreen) {
+            limitFrontX = Math.min(limitFrontX, stopLineX);
+          }
+
+          // Also avoid rear-ending the next car.
+          const lead = getLeadCarAhead(car);
+          if (lead) {
+            const leadRearX = lead.x - lead.length * 0.5;
+            limitFrontX = Math.min(limitFrontX, leadRearX - minGap);
+          }
+
+          const carFrontX = car.x + car.length * 0.5;
+          const distToLimit = limitFrontX - carFrontX;
+
+          // Choose a desired speed based on distance.
+          let desiredV = car.targetV;
+          if (distToLimit < Infinity) {
+            // If close to limit, smoothly bring desired speed down.
+            const slowZone = Math.max(1, Math.floor(140 * scale));
+            const t = clamp(distToLimit / slowZone, 0, 1);
+            desiredV = desiredV * t;
+            if (distToLimit < buffer) desiredV = 0;
+          }
+
+          // Accel/brake towards desiredV
+          const dv = desiredV - car.v;
+          if (dv > 0) {
+            car.v += Math.min(dv, maxAccel * dt);
+          } else {
+            car.v += Math.max(dv, -maxDecel * dt);
+          }
+
+          // Integrate position
+          car.x += car.v * dt;
+
+          // Hard clamp if we crossed the limit.
+          if (distToLimit < 0) {
+            car.x += distToLimit; // move back so front aligns with limit
+            car.v = 0;
+          }
+
+          // tiny lane wobble for life
+          car.laneY = state.view.laneY + car.wobble;
+        }
+
+        spawnCarIfNeeded();
+      }
+
+      function drawBackground() {
+        const { w, h } = state.view;
+
+        // Subtle stars
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = '#ffffff';
+        const n = Math.floor((w * h) / 65000);
+        for (let i = 0; i < n; i++) {
+          const x = (rand() * w) | 0;
+          const y = (rand() * (h * 0.55)) | 0;
+          const r = rand() < 0.9 ? 1 : 2;
+          ctx.fillRect(x, y, r, r);
+        }
+        ctx.restore();
+
+        // Distant gradient glow
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, 'rgba(90, 140, 255, 0.12)');
+        g.addColorStop(0.55, 'rgba(0, 0, 0, 0.0)');
+        g.addColorStop(1, 'rgba(0, 0, 0, 0.28)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      function drawRoad() {
+        const { w, roadY, roadH, laneY, scale } = state.view;
+        const s = scale;
+
+        // Road base
+        const roadGrad = ctx.createLinearGradient(0, roadY, 0, roadY + roadH);
+        roadGrad.addColorStop(0, '#141827');
+        roadGrad.addColorStop(0.5, '#0c0f1c');
+        roadGrad.addColorStop(1, '#0a0c16');
+        ctx.fillStyle = roadGrad;
+        ctx.fillRect(0, roadY, w, roadH);
+
+        // Edges
+        ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+        ctx.lineWidth = Math.max(1, Math.floor(2 * s));
+        ctx.beginPath();
+        ctx.moveTo(0, roadY + 0.5);
+        ctx.lineTo(w, roadY + 0.5);
+        ctx.moveTo(0, roadY + roadH - 0.5);
+        ctx.lineTo(w, roadY + roadH - 0.5);
+        ctx.stroke();
+
+        // Center lane markers (dashed)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = Math.max(1, Math.floor(2 * s));
+        ctx.setLineDash([Math.floor(22 * s), Math.floor(18 * s)]);
+        ctx.lineDashOffset = -state.t * (140 * s);
+        ctx.beginPath();
+        ctx.moveTo(0, laneY);
+        ctx.lineTo(w, laneY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Asphalt noise
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        for (let i = 0; i < 120; i++) {
+          const x = (rand() * w) | 0;
+          const y = (roadY + rand() * roadH) | 0;
+          const a = rand() * 0.35;
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.fillRect(x, y, 1, 1);
+        }
+        ctx.restore();
+      }
+
+      function drawTrafficLight() {
+        const { roadY, roadH, lightX, stopLineX, scale } = state.view;
+        const s = scale;
+        const isGreen = state.light.isGreen;
+
+        const poleTop = roadY - Math.floor(58 * s);
+        const poleBottom = roadY + roadH + Math.floor(10 * s);
+
+        // Stop line
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = Math.max(1, Math.floor(3 * s));
+        ctx.beginPath();
+        ctx.moveTo(stopLineX, roadY + Math.floor(10 * s));
+        ctx.lineTo(stopLineX, roadY + roadH - Math.floor(10 * s));
+        ctx.stroke();
+        ctx.restore();
+
+        // Pole
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = Math.max(1, Math.floor(5 * s));
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(lightX, poleTop);
+        ctx.lineTo(lightX, poleBottom);
+        ctx.stroke();
+        ctx.restore();
+
+        // Light box
+        const boxW = Math.floor(30 * s);
+        const boxH = Math.floor(62 * s);
+        const boxX = lightX - Math.floor(boxW / 2);
+        const boxY = poleTop + Math.floor(6 * s);
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(10, 12, 18, 0.90)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = Math.max(1, Math.floor(2 * s));
+        roundRect(ctx, boxX, boxY, boxW, boxH, 8 * s);
+        ctx.fill();
+        ctx.stroke();
+
+        const cx = lightX;
+        const r = Math.floor(8 * s);
+        const redY = boxY + Math.floor(18 * s);
+        const greenY = boxY + Math.floor(44 * s);
+
+        // red bulb
+        bulb(cx, redY, r, !isGreen ? '#ff3b4d' : 'rgba(255,255,255,0.10)', !isGreen);
+        // green bulb
+        bulb(cx, greenY, r, isGreen ? '#26df7f' : 'rgba(255,255,255,0.10)', isGreen);
+
+        ctx.restore();
+
+        function bulb(x, y, rad, fill, on) {
+          ctx.beginPath();
+          ctx.arc(x, y, rad, 0, Math.PI * 2);
+          ctx.fillStyle = fill;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+          ctx.stroke();
+          if (on) {
+            ctx.save();
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle = fill;
+            ctx.beginPath();
+            ctx.arc(x, y, rad * 2.1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+      }
+
+      function roundRect(c, x, y, w, h, r) {
+        const rr = Math.min(r, w / 2, h / 2);
+        c.beginPath();
+        c.moveTo(x + rr, y);
+        c.arcTo(x + w, y, x + w, y + h, rr);
+        c.arcTo(x + w, y + h, x, y + h, rr);
+        c.arcTo(x, y + h, x, y, rr);
+        c.arcTo(x, y, x + w, y, rr);
+        c.closePath();
+      }
+
+      function drawCars() {
+        const { roadY, roadH, scale } = state.view;
+        const s = scale;
+
+        for (const car of state.cars) {
+          const x = car.x;
+          const y = car.laneY;
+          const w = car.length;
+          const h = car.height;
+          const bodyY = y - h * 0.5;
+
+          // Shadow
+          ctx.save();
+          ctx.globalAlpha = 0.28;
+          ctx.fillStyle = '#000000';
+          roundRect(ctx, x - w * 0.48, bodyY + h * 0.62, w * 0.96, h * 0.55, 7 * s);
+          ctx.fill();
+          ctx.restore();
+
+          // Body
+          ctx.save();
+          const gloss = ctx.createLinearGradient(0, bodyY, 0, bodyY + h);
+          gloss.addColorStop(0, 'rgba(255,255,255,0.18)');
+          gloss.addColorStop(0.35, 'rgba(255,255,255,0.02)');
+          gloss.addColorStop(1, 'rgba(0,0,0,0.22)');
+
+          ctx.fillStyle = car.color;
+          ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+          ctx.lineWidth = Math.max(1, Math.floor(2 * s));
+          roundRect(ctx, x - w * 0.5, bodyY, w, h, 9 * s);
+          ctx.fill();
+          ctx.stroke();
+
+          // Windshield
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = 'rgba(10, 18, 28, 0.55)';
+          roundRect(ctx, x - w * 0.18, bodyY + h * 0.20, w * 0.38, h * 0.42, 6 * s);
+          ctx.fill();
+
+          // Gloss overlay
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = gloss;
+          roundRect(ctx, x - w * 0.5, bodyY, w, h, 9 * s);
+          ctx.fill();
+
+          // Wheels
+          const wr = car.wheelR;
+          const wy = bodyY + h;
+          wheel(x - w * 0.28, wy, wr);
+          wheel(x + w * 0.28, wy, wr);
+
+          // Headlights glow (only forward)
+          ctx.save();
+          ctx.globalAlpha = 0.18;
+          ctx.fillStyle = 'rgba(255, 248, 200, 0.9)';
+          ctx.beginPath();
+          ctx.ellipse(x + w * 0.5, bodyY + h * 0.60, 9 * s, 6 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.restore();
+        }
+
+        function wheel(wx, wy, r) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(0,0,0,0.65)';
+          ctx.beginPath();
+          ctx.arc(wx, wy, r + 1, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(wx, wy, r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      function draw() {
+        const { w, h } = state.view;
+        ctx.clearRect(0, 0, w, h);
+
+        drawBackground();
+        drawRoad();
+        drawTrafficLight();
+        drawCars();
+
+        // Caption inside canvas (for iframe-only viewing)
+        ctx.save();
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+        ctx.lineWidth = 1;
+        const pad = 10;
+        const boxW = Math.min(420, Math.floor(w * 0.62));
+        const boxH = 34;
+        const x = pad;
+        const y = Math.floor(h - boxH - pad);
+        roundRect(ctx, x, y, boxW, boxH, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.font = '12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+        const txt = `Light: ${state.light.isGreen ? 'GREEN' : 'RED'}  •  Cars: ${state.cars.length}  •  Agent: gpt-5.2`;
+        ctx.fillText(txt, x + 12, y + 22);
+        ctx.restore();
+      }
+
+      // Seed initial cars
+      for (let i = 0; i < 6; i++) spawnCarIfNeeded();
+
+      function frame(nowMs) {
+        const dt = clamp((nowMs - state.lastMs) / 1000, 0, 0.05);
+        state.lastMs = nowMs;
+        state.t += dt;
+
+        updateLight(state.t);
+        step(dt);
+        draw();
+
+        requestAnimationFrame(frame);
+      }
+
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
