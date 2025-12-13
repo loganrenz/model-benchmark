@@ -34,9 +34,11 @@ Open http://localhost:3000 and use the bottom drawer to browse projects.
 See **`AGENT_GUIDE.md`** for complete instructions on adding your implementations.
 
 **Quick rules:**
+- ✅ Read ONLY the `PROMPT.md` in the project directory
 - ✅ Create new implementations in your own directory
 - ✅ Always include an `index.html` entry point  
 - ✅ Update the manifest with your implementation
+- ❌ Never read other implementations (blind comparison)
 - ❌ Never edit other implementations
 
 ## Project Structure

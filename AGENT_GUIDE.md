@@ -8,13 +8,15 @@ This is a **project comparison tool** where multiple AI agents implement the sam
 
 When you receive a task to implement a project:
 
-1. **Read** `public/projects/<project-name>/PROMPT.md` - This is your specification
+1. **Read ONLY** `public/projects/<project-name>/PROMPT.md` - This is your specification
+   - ⚠️ **DO NOT read other implementations** - Create your own from scratch
+   - ⚠️ **DO NOT look at reference code** - Work independently
 2. **Create** `public/projects/<project-name>/<your-agent-name>/` - Your implementation folder
 3. **Write** `public/projects/<project-name>/<your-agent-name>/index.html` - Your entry point (required)
 4. **Update** `public/data/manifest.json` - Register your implementation
 5. **Test** locally with `npm run dev` and verify it displays correctly
 
-That's it! Keep reading for detailed guidelines.
+**Important:** This is a blind comparison. Each agent should implement the project based solely on the PROMPT.md without seeing how others solved it. This ensures genuine comparison of different approaches.
 
 ---
 
@@ -61,28 +63,39 @@ Use descriptive names for implementations:
 ## Rules for Agents
 
 ### ✅ ALLOWED
+- Read `PROMPT.md` in the project directory
+- Read `AGENT_GUIDE.md`, `README.md` for structure/guidelines
 - Create NEW implementations in a new directory under the project
 - Add files within your own implementation directory
 - Update `public/data/manifest.json` to register your implementation
 
-### ❌ FORBIDDEN
+### ❌ FORBIDDEN - Critical Rules
+- **DO NOT** read other implementations (reference, agent-*, etc.)
+- **DO NOT** look at other agent's code or approaches
 - **DO NOT** edit or delete other implementations
 - **DO NOT** modify files in other implementation directories
 - **DO NOT** change the project PROMPT.md after agents start implementing
 - **DO NOT** modify shared resources that other implementations depend on
+- **DO NOT** modify the Nuxt app code (components, pages, etc.) unless fixing bugs
+
+**Why these restrictions?** This is a blind comparison. Each agent must work independently from the PROMPT.md only, without being influenced by existing solutions. This ensures an authentic comparison of different AI approaches.
 
 ---
 
 ## Files to Read (Before You Start)
 
-To understand the project structure and existing implementations:
-
+**Required Reading:**
 1. **`AGENT_GUIDE.md`** (this file) - Complete guidelines
-2. **`README.md`** - Project overview and quick reference
+2. **`README.md`** - Project overview and quick reference  
 3. **`public/data/manifest.json`** - See how projects/implementations are registered
 4. **`public/projects/<project>/PROMPT.md`** - Your specification (≤100 words)
-5. **Existing implementations** (optional) - See reference implementations for ideas
-   - e.g., `public/projects/<project>/reference/index.html`
+
+**⚠️ DO NOT READ:**
+- **Other implementations** (e.g., `reference/`, `agent-*/`) - Work independently!
+- **Other agent's code** - This defeats the purpose of comparison
+- **Any files outside the project structure docs**
+
+**Why?** This is a blind comparison test. We want to see how different agents approach the same problem independently, without being influenced by existing solutions.
 
 ## Adding Your Implementation
 
@@ -153,9 +166,11 @@ Edit `public/data/manifest.json` to add your implementation:
 
 ## Implementation Guidelines
 
-### 1. Read the PROMPT.md
+### 1. Read ONLY the PROMPT.md
 
-Each project has a `PROMPT.md` file (max 100 words) describing what to build. This is your specification.
+Each project has a `PROMPT.md` file (max 100 words) describing what to build. This is your ONLY specification.
+
+**Work independently:** Do not reference other implementations. Create your solution based solely on the prompt. This ensures genuine comparison of different agent approaches.
 
 ### 2. Keep It Simple
 
