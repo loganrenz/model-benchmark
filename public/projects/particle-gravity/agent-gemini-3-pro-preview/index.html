@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Gravity - Gemini 3 Pro Preview</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #111; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        const GRAVITY = 0.5;
+        const DAMPENING = 0.8;
+        const PARTICLES_COUNT = 30;
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.radius = 10 + Math.random() * 15;
+                this.x = Math.random() * (width - 2 * this.radius) + this.radius;
+                this.y = Math.random() * (height / 3) + this.radius; // Spawn in top third
+                this.vx = (Math.random() - 0.5) * 15;
+                this.vy = (Math.random() - 0.5) * 15;
+                
+                // Vibrant colors
+                const hue = Math.random() * 360;
+                this.color = `hsl(${hue}, 70%, 60%)`;
+            }
+
+            update() {
+                this.vy += GRAVITY;
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Wall collisions
+                // Bottom
+                if (this.y + this.radius > height) {
+                    this.y = height - this.radius;
+                    this.vy *= -DAMPENING;
+                    // Friction on ground
+                    this.vx *= 0.95; 
+                }
+                // Top (optional, keep them in bounds)
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.vy *= -DAMPENING;
+                }
+
+                // Sides
+                if (this.x + this.radius > width) {
+                    this.x = width - this.radius;
+                    this.vx *= -DAMPENING;
+                }
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx *= -DAMPENING;
+                }
+
+                // Reset if almost stopped and on bottom to keep it interesting
+                if (Math.abs(this.vy) < 0.5 && Math.abs(this.vx) < 0.1 && this.y > height - this.radius - 5) {
+                    // Small chance to respawn or just kick it
+                    if (Math.random() < 0.02) this.reset();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // Shine effect
+                ctx.beginPath();
+                ctx.arc(this.x - this.radius*0.3, this.y - this.radius*0.3, this.radius/3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fill();
+            }
+        }
+
+        let particles = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Re-init particles if empty, otherwise just let them adjust bounds
+            if (particles.length === 0) {
+                for(let i=0; i<PARTICLES_COUNT; i++) {
+                    particles.push(new Particle());
+                }
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function animate() {
+            // Clear with trail effect
+            ctx.fillStyle = 'rgba(17, 17, 17, 0.3)';
+            ctx.fillRect(0, 0, width, height);
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

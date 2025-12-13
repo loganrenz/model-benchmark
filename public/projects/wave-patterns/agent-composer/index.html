@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Pattern Generator - Composer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #0a0a0a;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Wave source class
+        class WaveSource {
+            constructor(x, y, frequency, phaseOffset = 0) {
+                this.x = x;
+                this.y = y;
+                this.frequency = frequency; // Waves per second
+                this.phaseOffset = phaseOffset;
+                this.time = phaseOffset;
+            }
+            
+            update(deltaTime) {
+                this.time += deltaTime * this.frequency;
+            }
+            
+            getAmplitude(distance) {
+                // Calculate wave amplitude at a given distance
+                const wavelength = 80;
+                const phase = (this.time * 2 * Math.PI) - (distance / wavelength * 2 * Math.PI);
+                return Math.cos(phase) * (1 / (1 + distance * 0.01)); // Amplitude decreases with distance
+            }
+        }
+        
+        // Create wave sources
+        const waveSources = [
+            new WaveSource(canvas.width * 0.3, canvas.height * 0.3, 0.8, 0),
+            new WaveSource(canvas.width * 0.7, canvas.height * 0.3, 0.9, Math.PI / 3),
+            new WaveSource(canvas.width * 0.5, canvas.height * 0.6, 0.85, Math.PI / 2),
+            new WaveSource(canvas.width * 0.2, canvas.height * 0.7, 0.75, Math.PI),
+            new WaveSource(canvas.width * 0.8, canvas.height * 0.7, 0.95, Math.PI * 1.5)
+        ];
+        
+        // Image data for pixel manipulation
+        let imageData = ctx.createImageData(canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        // Color mapping function
+        function getColor(amplitude) {
+            // Map amplitude (-1 to 1) to color
+            // Use a vibrant color scheme
+            const normalized = (amplitude + 1) / 2; // 0 to 1
+            
+            // Create a color gradient: deep blue -> cyan -> yellow -> red
+            let r, g, b;
+            
+            if (normalized < 0.25) {
+                // Deep blue to cyan
+                const t = normalized / 0.25;
+                r = Math.floor(0 + t * 0);
+                g = Math.floor(50 + t * 200);
+                b = Math.floor(100 + t * 255);
+            } else if (normalized < 0.5) {
+                // Cyan to yellow
+                const t = (normalized - 0.25) / 0.25;
+                r = Math.floor(0 + t * 255);
+                g = Math.floor(255);
+                b = Math.floor(255 - t * 255);
+            } else if (normalized < 0.75) {
+                // Yellow to orange
+                const t = (normalized - 0.5) / 0.25;
+                r = Math.floor(255);
+                g = Math.floor(255 - t * 100);
+                b = Math.floor(0);
+            } else {
+                // Orange to red
+                const t = (normalized - 0.75) / 0.25;
+                r = Math.floor(255);
+                g = Math.floor(155 - t * 155);
+                b = Math.floor(0);
+            }
+            
+            return { r, g, b };
+        }
+        
+        let lastTime = performance.now();
+        
+        // Animation loop
+        function animate(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+            lastTime = currentTime;
+            
+            // Update wave sources
+            waveSources.forEach(source => {
+                source.update(deltaTime);
+            });
+            
+            // Calculate wave interference at each pixel
+            const pixelSize = 2; // For performance, sample every 2 pixels
+            const width = Math.floor(canvas.width / pixelSize);
+            const height = Math.floor(canvas.height / pixelSize);
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const px = x * pixelSize;
+                    const py = y * pixelSize;
+                    
+                    // Calculate distance to each wave source and sum amplitudes
+                    let totalAmplitude = 0;
+                    waveSources.forEach(source => {
+                        const dx = px - source.x;
+                        const dy = py - source.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        totalAmplitude += source.getAmplitude(distance);
+                    });
+                    
+                    // Normalize amplitude
+                    totalAmplitude = totalAmplitude / waveSources.length;
+                    
+                    // Get color based on amplitude
+                    const color = getColor(totalAmplitude);
+                    
+                    // Set pixel color (fill pixelSize x pixelSize area)
+                    for (let dy = 0; dy < pixelSize && py + dy < canvas.height; dy++) {
+                        for (let dx = 0; dx < pixelSize && px + dx < canvas.width; dx++) {
+                            const idx = ((py + dy) * canvas.width + (px + dx)) * 4;
+                            data[idx] = color.r;     // R
+                            data[idx + 1] = color.g; // G
+                            data[idx + 2] = color.b; // B
+                            data[idx + 3] = 255;     // A
+                        }
+                    }
+                }
+            }
+            
+            // Put image data to canvas
+            ctx.putImageData(imageData, 0, 0);
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Start animation
+        animate(performance.now());
+    </script>
+</body>
+</html>

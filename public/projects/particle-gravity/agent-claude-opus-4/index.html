@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle Gravity Simulation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    canvas {
+      display: block;
+      border-radius: 8px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Responsive canvas sizing
+    function resizeCanvas() {
+      const padding = 40;
+      const maxWidth = 900;
+      const maxHeight = 700;
+      
+      canvas.width = Math.min(window.innerWidth - padding, maxWidth);
+      canvas.height = Math.min(window.innerHeight - padding, maxHeight);
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Physics constants
+    const GRAVITY = 0.4;
+    const DAMPING = 0.85; // Energy loss on bounce
+    const AIR_RESISTANCE = 0.995;
+    const PARTICLE_COUNT = 25;
+    
+    // Generate vibrant colors using HSL
+    function generateColor() {
+      const hue = Math.random() * 360;
+      const saturation = 70 + Math.random() * 30; // 70-100%
+      const lightness = 50 + Math.random() * 20; // 50-70%
+      return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+    
+    // Particle class
+    class Particle {
+      constructor() {
+        this.radius = 8 + Math.random() * 12;
+        this.mass = this.radius * 0.5; // Mass proportional to size
+        this.x = this.radius + Math.random() * (canvas.width - 2 * this.radius);
+        this.y = this.radius + Math.random() * (canvas.height * 0.4);
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.color = generateColor();
+        this.glowColor = this.color;
+        this.trail = [];
+        this.maxTrailLength = 8;
+      }
+      
+      update() {
+        // Store position for trail
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > this.maxTrailLength) {
+          this.trail.shift();
+        }
+        
+        // Apply gravity
+        this.vy += GRAVITY;
+        
+        // Apply air resistance
+        this.vx *= AIR_RESISTANCE;
+        this.vy *= AIR_RESISTANCE;
+        
+        // Update position
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        // Bounce off walls
+        this.bounceOffWalls();
+      }
+      
+      bounceOffWalls() {
+        // Right wall
+        if (this.x + this.radius > canvas.width) {
+          this.x = canvas.width - this.radius;
+          this.vx *= -DAMPING;
+        }
+        
+        // Left wall
+        if (this.x - this.radius < 0) {
+          this.x = this.radius;
+          this.vx *= -DAMPING;
+        }
+        
+        // Bottom wall
+        if (this.y + this.radius > canvas.height) {
+          this.y = canvas.height - this.radius;
+          this.vy *= -DAMPING;
+          
+          // Add friction when on ground
+          this.vx *= 0.98;
+          
+          // Stop jittering if velocity is too small
+          if (Math.abs(this.vy) < 0.5) {
+            this.vy = 0;
+          }
+        }
+        
+        // Top wall (optional, for completeness)
+        if (this.y - this.radius < 0) {
+          this.y = this.radius;
+          this.vy *= -DAMPING;
+        }
+      }
+      
+      draw() {
+        // Draw trail
+        for (let i = 0; i < this.trail.length; i++) {
+          const alpha = (i / this.trail.length) * 0.3;
+          const size = this.radius * (i / this.trail.length) * 0.7;
+          ctx.beginPath();
+          ctx.arc(this.trail[i].x, this.trail[i].y, size, 0, Math.PI * 2);
+          ctx.fillStyle = this.color.replace(')', `, ${alpha})`).replace('hsl', 'hsla');
+          ctx.fill();
+        }
+        
+        // Draw glow effect
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y, 0,
+          this.x, this.y, this.radius * 2
+        );
+        gradient.addColorStop(0, this.color.replace(')', ', 0.4)').replace('hsl', 'hsla'));
+        gradient.addColorStop(1, this.color.replace(')', ', 0)').replace('hsl', 'hsla'));
+        
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Draw main particle
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        
+        // Inner gradient for 3D effect
+        const innerGradient = ctx.createRadialGradient(
+          this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
+          this.x, this.y, this.radius
+        );
+        innerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        innerGradient.addColorStop(0.3, this.color);
+        innerGradient.addColorStop(1, this.color.replace(/\d+%\)$/, (match) => {
+          const lightness = parseInt(match);
+          return `${Math.max(lightness - 20, 20)}%)`;
+        }));
+        
+        ctx.fillStyle = innerGradient;
+        ctx.fill();
+        
+        // Subtle outline
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+    
+    // Create particles
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push(new Particle());
+    }
+    
+    // Animation loop
+    function animate() {
+      // Clear with slight fade for motion blur effect
+      ctx.fillStyle = 'rgba(18, 18, 35, 0.92)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw ground indicator
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height - 1);
+      ctx.lineTo(canvas.width, canvas.height - 1);
+      ctx.stroke();
+      
+      // Draw side wall indicators
+      ctx.beginPath();
+      ctx.moveTo(1, 0);
+      ctx.lineTo(1, canvas.height);
+      ctx.moveTo(canvas.width - 1, 0);
+      ctx.lineTo(canvas.width - 1, canvas.height);
+      ctx.stroke();
+      
+      // Update and draw particles
+      for (const particle of particles) {
+        particle.update();
+        particle.draw();
+      }
+      
+      requestAnimationFrame(animate);
+    }
+    
+    // Start animation
+    animate();
+  </script>
+</body>
+</html>
