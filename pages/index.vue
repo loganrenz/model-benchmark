@@ -89,7 +89,7 @@ watchEffect(() => {
     <!-- Main Content -->
     <div v-else class="flex h-full flex-col">
       <!-- Iframe Viewer -->
-      <div class="flex-1">
+      <div class="flex-1 pb-[10vh]">
         <iframe
           v-if="active"
           :key="active.src"
