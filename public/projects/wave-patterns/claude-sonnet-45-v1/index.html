@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave Pattern Generator</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      border: 3px solid #1a1a3a;
+      box-shadow: 0 0 60px rgba(100, 50, 200, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = 900;
+    canvas.height = 600;
+    
+    // Wave sources positioned in interesting pattern
+    const sources = [
+      { x: 300, y: 300, phase: 0, frequency: 0.04 },
+      { x: 600, y: 300, phase: Math.PI, frequency: 0.04 },
+      { x: 450, y: 180, phase: Math.PI / 2, frequency: 0.05 },
+      { x: 450, y: 420, phase: 3 * Math.PI / 2, frequency: 0.045 }
+    ];
+    
+    let time = 0;
+    const wavelength = 35;
+    
+    function calculateWave(x, y, t) {
+      let sum = 0;
+      
+      sources.forEach(source => {
+        const dx = x - source.x;
+        const dy = y - source.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        const wave = Math.sin((distance * source.frequency) - (t * 2) + source.phase);
+        sum += wave;
+      });
+      
+      return sum / sources.length;
+    }
+    
+    function render() {
+      const imageData = ctx.createImageData(canvas.width, canvas.height);
+      const pixels = imageData.data;
+      
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const wave = calculateWave(x, y, time);
+          const idx = (y * canvas.width + x) * 4;
+          
+          // Map wave value (-1 to 1) to color
+          const val = (wave + 1) / 2; // Normalize to 0-1
+          
+          // Create colorful gradient based on wave value
+          if (val > 0.66) {
+            // High peaks - bright purple/pink
+            const intensity = (val - 0.66) * 3;
+            pixels[idx] = 255 * intensity;     // R
+            pixels[idx + 1] = 100 * intensity; // G
+            pixels[idx + 2] = 255;             // B
+          } else if (val > 0.33) {
+            // Medium - blue/cyan
+            const intensity = (val - 0.33) * 3;
+            pixels[idx] = 50 * intensity;      // R
+            pixels[idx + 1] = 150 + 105 * intensity; // G
+            pixels[idx + 2] = 255;             // B
+          } else {
+            // Low - dark blue/black
+            const intensity = val * 3;
+            pixels[idx] = 0;                   // R
+            pixels[idx + 1] = 30 * intensity;  // G
+            pixels[idx + 2] = 80 * intensity;  // B
+          }
+          
+          pixels[idx + 3] = 255; // Alpha
+        }
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      
+      // Draw source markers with pulsing animation
+      sources.forEach((source, i) => {
+        const pulse = Math.abs(Math.sin(time + source.phase)) * 0.5 + 0.5;
+        
+        // Outer ring
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.6 * pulse})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(source.x, source.y, 8 + pulse * 5, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Inner dot
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(source.x, source.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Expanding wave ring
+        const ringRadius = (time * 40 + i * 20) % 80;
+        const ringOpacity = 1 - (ringRadius / 80);
+        ctx.strokeStyle = `rgba(150, 255, 255, ${ringOpacity * 0.5})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(source.x, source.y, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    }
+    
+    function animate() {
+      time += 0.08;
+      render();
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
+  </script>
+</body>
+</html>

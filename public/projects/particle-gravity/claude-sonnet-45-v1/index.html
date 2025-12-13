@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle Gravity Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at center, #1a1a2e, #0f0f1e);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      border: 3px solid rgba(100, 200, 255, 0.3);
+      box-shadow: 0 0 30px rgba(100, 200, 255, 0.2);
+      background: #0d0d1a;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = 900;
+    canvas.height = 600;
+    
+    const GRAVITY = 0.4;
+    const BOUNCE_DAMPING = 0.75;
+    const PARTICLE_COUNT = 30;
+    const MIN_RADIUS = 6;
+    const MAX_RADIUS = 12;
+    
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * 100;
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = Math.random() * -3;
+        this.radius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS);
+        
+        // Generate vibrant color
+        const colors = [
+          '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24',
+          '#6c5ce7', '#a29bfe', '#fd79a8', '#00b894',
+          '#ff7675', '#74b9ff', '#a29bfe', '#ffeaa7'
+        ];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.mass = this.radius / 10;
+      }
+      
+      update(deltaTime) {
+        // Apply gravity
+        this.vy += GRAVITY * deltaTime;
+        
+        // Update position
+        this.x += this.vx * deltaTime;
+        this.y += this.vy * deltaTime;
+        
+        // Bounce off bottom
+        if (this.y + this.radius >= canvas.height) {
+          this.y = canvas.height - this.radius;
+          this.vy = -Math.abs(this.vy) * BOUNCE_DAMPING;
+          this.vx *= 0.98;
+          
+          // Reset if particle has settled
+          if (Math.abs(this.vy) < 0.3) {
+            setTimeout(() => this.reset(), Math.random() * 2000);
+          }
+        }
+        
+        // Bounce off top
+        if (this.y - this.radius <= 0) {
+          this.y = this.radius;
+          this.vy = Math.abs(this.vy) * BOUNCE_DAMPING;
+        }
+        
+        // Bounce off sides
+        if (this.x - this.radius <= 0) {
+          this.x = this.radius;
+          this.vx = Math.abs(this.vx) * BOUNCE_DAMPING;
+        }
+        if (this.x + this.radius >= canvas.width) {
+          this.x = canvas.width - this.radius;
+          this.vx = -Math.abs(this.vx) * BOUNCE_DAMPING;
+        }
+      }
+      
+      draw() {
+        // Shadow
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = this.color;
+        
+        // Main particle
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Shine effect
+        const gradient = ctx.createRadialGradient(
+          this.x - this.radius * 0.3,
+          this.y - this.radius * 0.3,
+          0,
+          this.x,
+          this.y,
+          this.radius
+        );
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.2)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+      }
+    }
+    
+    // Create particles
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push(new Particle());
+    }
+    
+    let lastTime = performance.now();
+    
+    function animate(currentTime) {
+      const deltaTime = Math.min((currentTime - lastTime) / 16.67, 2);
+      lastTime = currentTime;
+      
+      // Clear with fade effect
+      ctx.fillStyle = 'rgba(13, 13, 26, 0.25)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Update and draw particles
+      particles.forEach(particle => {
+        particle.update(deltaTime);
+        particle.draw();
+      });
+      
+      requestAnimationFrame(animate);
+    }
+    
+    animate(performance.now());
+  </script>
+</body>
+</html>
