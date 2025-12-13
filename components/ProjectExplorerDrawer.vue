@@ -44,7 +44,7 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
   <!-- Drawer -->
   <div
     class="fixed inset-x-0 bottom-0 z-50 transition-transform duration-300"
-    :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-4rem)]'"
+    :class="isOpen ? 'translate-y-0' : 'translate-y-[90vh]'"
   >
     <div class="mx-auto max-w-3xl rounded-t-2xl border border-gray-200 bg-white shadow-xl">
       <!-- Handle -->
@@ -63,7 +63,7 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
       </button>
 
       <!-- Content -->
-      <div class="max-h-[70vh] overflow-y-auto border-t border-gray-200 p-4">
+      <div class="max-h-[calc(75vh-4rem)] overflow-y-auto border-t border-gray-200 p-4">
         <ProjectTree
           :manifest="manifest"
           :active-key="activeKey"
