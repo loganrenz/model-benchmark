@@ -1,0 +1,17 @@
+name = "thumbnail-generator"
+main = "src/index.ts"
+compatibility_date = "2025-07-15"
+
+# Browser Rendering binding
+browser = { binding = "BROWSER" }
+
+# D1 Database binding (to update thumbnails)
+[[d1_databases]]
+binding = "DB"
+database_name = "model-benchmark-db"
+database_id = "6ac70ed1-1031-4f67-830d-4157c1d6b942"
+
+# Cron trigger to generate thumbnails periodically
+[triggers]
+crons = ["0 */6 * * *"]  # Every 6 hours
+
