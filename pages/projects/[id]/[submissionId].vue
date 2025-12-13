@@ -17,6 +17,23 @@ const { data: submission, error: submissionError } = await useFetch<Submission>(
   `/api/submissions/${submissionId}`
 )
 
+// Breadcrumbs
+const breadcrumbs = computed(() => {
+  const crumbs = []
+  if (project.value) {
+    crumbs.push({
+      label: project.value.label,
+      to: `/projects/${projectId}`
+    })
+  }
+  if (submission.value) {
+    crumbs.push({
+      label: submission.value.label
+    })
+  }
+  return crumbs
+})
+
 const backUrl = computed(() => `/projects/${projectId}`)
 
 // Navigation state
@@ -125,21 +142,34 @@ function openInNewTab() {
     <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/5 flex-shrink-0">
       <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div class="flex items-center justify-between gap-4">
-          <div class="flex items-center gap-4 flex-1 min-w-0">
-            <NuxtLink
-              :to="backUrl"
-              class="flex size-10 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all active:scale-95 flex-shrink-0 group"
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <!-- Logo/Home -->
+            <NuxtLink 
+              to="/" 
+              class="flex items-center flex-shrink-0 group"
             >
-              <UIcon name="i-heroicons-squares-2x2" class="size-5 text-slate-400 group-hover:text-white transition-colors" />
+              <div class="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+                <UIcon name="i-heroicons-cube-transparent" class="size-4 text-white" />
+              </div>
             </NuxtLink>
-            
-            <div class="flex-1 min-w-0">
-              <h1 v-if="project" class="text-base lg:text-lg font-semibold text-white truncate">
+
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 min-w-0">
+              <UIcon name="i-heroicons-chevron-right" class="size-4 text-slate-600 flex-shrink-0" />
+              
+              <NuxtLink 
+                :to="backUrl"
+                class="text-sm font-semibold text-slate-400 hover:text-white transition-colors truncate max-w-[100px] sm:max-w-[150px]"
+              >
+                {{ project?.label || 'Project' }}
+              </NuxtLink>
+              
+              <UIcon name="i-heroicons-chevron-right" class="size-4 text-slate-600 flex-shrink-0" />
+              
+              <span class="text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[200px]">
                 {{ submissionLabel }}
-              </h1>
-              <div v-else class="h-5 w-48 bg-white/10 rounded animate-pulse"></div>
-              <p v-if="project" class="text-xs text-slate-400 mt-0.5">{{ project.label }}</p>
-            </div>
+              </span>
+            </nav>
           </div>
 
           <!-- Center Navigation -->
@@ -317,4 +347,3 @@ function openInNewTab() {
     </div>
   </div>
 </template>
-

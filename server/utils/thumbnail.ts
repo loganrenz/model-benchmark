@@ -40,7 +40,7 @@ async function captureScreenshotFromHtml(htmlContent: string, apiKey: string): P
     delay: '1', // Wait 1 second for animations to start
     block_ads: 'true',
     block_cookie_banners: 'true',
-    response_type: 'base64'
+    response_type: 'by_format' // Returns the image directly in the response body
   })
 
   const response = await fetch(`https://api.screenshotone.com/take?${params.toString()}`)
@@ -50,7 +50,9 @@ async function captureScreenshotFromHtml(htmlContent: string, apiKey: string): P
     throw new Error(`Screenshotone API error: ${response.status} - ${errorText}`)
   }
 
-  const base64 = await response.text()
+  // Convert the binary response to base64
+  const arrayBuffer = await response.arrayBuffer()
+  const base64 = Buffer.from(arrayBuffer).toString('base64')
   return `data:image/jpeg;base64,${base64}`
 }
 
