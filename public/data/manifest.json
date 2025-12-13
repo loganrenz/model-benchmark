@@ -48,6 +48,11 @@
           "id": "claude-sonnet-45-v2",
           "label": "Claude Sonnet 4.5 (v2)",
           "file": "claude-sonnet-45-v2/index.html"
+        },
+        {
+          "id": "agent-claude-opus-4",
+          "label": "Claude Opus 4",
+          "file": "agent-claude-opus-4/index.html"
         }
       ]
     },
@@ -70,6 +75,11 @@
           "id": "claude-sonnet-45-v2",
           "label": "Claude Sonnet 4.5 (v2)",
           "file": "claude-sonnet-45-v2/index.html"
+        },
+        {
+          "id": "agent-claude-opus-4",
+          "label": "Claude Opus 4",
+          "file": "agent-claude-opus-4/index.html"
         }
       ]
     }
