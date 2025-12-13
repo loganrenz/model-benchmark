@@ -27,13 +27,22 @@ const { data: projectsData, error, pending } = await useFetch<{
             </div>
           </div>
           
-          <NuxtLink
-            to="/submit"
-            class="hidden sm:flex items-center gap-2 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 transition-all group"
-          >
-            <span>Submit</span>
-            <UIcon name="i-heroicons-paper-airplane" class="size-4 group-hover:translate-x-1 transition-transform" />
-          </NuxtLink>
+          <div class="flex items-center gap-3">
+            <NuxtLink
+              to="/instructions"
+              class="hidden sm:flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-all"
+            >
+              <UIcon name="i-heroicons-document-text" class="size-4" />
+              <span>Instructions</span>
+            </NuxtLink>
+            <NuxtLink
+              to="/submit"
+              class="hidden sm:flex items-center gap-2 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 transition-all group"
+            >
+              <span>Submit</span>
+              <UIcon name="i-heroicons-paper-airplane" class="size-4 group-hover:translate-x-1 transition-transform" />
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </header>

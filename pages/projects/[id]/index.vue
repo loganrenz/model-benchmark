@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Project } from '~/types/prompt'
+import type { Project, Model } from '~/types/prompt'
 
 const route = useRoute()
 const projectId = route.params.id as string
@@ -8,7 +8,55 @@ const { data: project, error, pending } = await useFetch<Project>(
   `/api/projects/${projectId}?includeModels=true`
 )
 
+// Filter state
+const searchQuery = ref('')
+const selectedAgent = ref<string>('')
+
+// Get unique agent names from models
+const uniqueAgents = computed(() => {
+  if (!project.value?.models) return []
+  const agents = new Set(project.value.models.map(m => {
+    // Extract agent name from label (usually "AgentName - Project")
+    const parts = m.label.split(' - ')
+    return parts.length > 1 ? parts[0].trim() : m.label
+  }))
+  return Array.from(agents).sort()
+})
+
+// Filtered models
+const filteredModels = computed(() => {
+  if (!project.value?.models) return []
+  
+  let models = [...project.value.models]
+  
+  // Filter by agent
+  if (selectedAgent.value) {
+    models = models.filter(m => {
+      const parts = m.label.split(' - ')
+      const agentName = parts.length > 1 ? parts[0].trim() : m.label
+      return agentName === selectedAgent.value
+    })
+  }
+  
+  // Filter by search query
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase()
+    models = models.filter(m => 
+      m.label.toLowerCase().includes(query)
+    )
+  }
+  
+  return models
+})
+
 const submissionCount = computed(() => project.value?.models?.length || 0)
+const filteredCount = computed(() => filteredModels.value.length)
+const hasFilters = computed(() => searchQuery.value.trim() || selectedAgent.value)
+
+function clearFilters() {
+  searchQuery.value = ''
+  selectedAgent.value = ''
+}
 </script>
 
 <template>
@@ -70,15 +118,74 @@ const submissionCount = computed(() => project.value?.models?.length || 0)
 
       <!-- Submissions Grid -->
       <div v-else-if="project">
-        <div v-if="project.models && project.models.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Filters -->
+        <div v-if="project.models && project.models.length > 0" class="mb-6 flex flex-wrap items-center gap-4">
+          <!-- Search -->
+          <div class="relative flex-1 min-w-[200px] max-w-md">
+            <UIcon name="i-heroicons-magnifying-glass" class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search submissions..."
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+          </div>
+          
+          <!-- Agent Filter -->
+          <div v-if="uniqueAgents.length > 1" class="relative">
+            <select
+              v-model="selectedAgent"
+              class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
+            >
+              <option value="">All Agents ({{ submissionCount }})</option>
+              <option v-for="agent in uniqueAgents" :key="agent" :value="agent">
+                {{ agent }}
+              </option>
+            </select>
+            <UIcon name="i-heroicons-chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
+          </div>
+          
+          <!-- Clear filters -->
+          <button
+            v-if="hasFilters"
+            @click="clearFilters"
+            class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <UIcon name="i-heroicons-x-mark" class="size-4" />
+            Clear
+          </button>
+          
+          <!-- Result count -->
+          <div v-if="hasFilters" class="text-sm text-gray-500">
+            {{ filteredCount }} of {{ submissionCount }} submissions
+          </div>
+        </div>
+
+        <div v-if="filteredModels.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <SubmissionThumbnail
-            v-for="model in project.models"
+            v-for="model in filteredModels"
             :key="model.id"
             :model="model"
             :project-id="project.id"
           />
         </div>
-        <div v-else class="flex flex-1 items-center justify-center p-8">
+        
+        <!-- No results from filter -->
+        <div v-else-if="hasFilters && project.models && project.models.length > 0" class="flex flex-1 items-center justify-center p-8">
+          <div class="w-full max-w-sm text-center">
+            <UIcon name="i-heroicons-magnifying-glass" class="size-12 text-gray-400 mx-auto mb-4" />
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No matching submissions</h3>
+            <p class="text-gray-600 text-sm mb-4">Try adjusting your search or filter criteria</p>
+            <button
+              @click="clearFilters"
+              class="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+            >
+              Clear all filters
+            </button>
+          </div>
+        </div>
+        
+        <div v-else-if="!project.models || project.models.length === 0" class="flex flex-1 items-center justify-center p-8">
           <div class="w-full max-w-md text-center">
             <div class="relative mx-auto mb-8">
               <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 opacity-20 blur-3xl animate-pulse"></div>
