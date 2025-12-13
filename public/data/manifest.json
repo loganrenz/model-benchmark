@@ -11,6 +11,11 @@
           "id": "reference",
           "label": "Reference Implementation",
           "file": "reference/index.html"
+        },
+        {
+          "id": "agent-claude-sonnet-4.5",
+          "label": "Claude Sonnet 4.5",
+          "file": "agent-claude-sonnet-4.5/index.html"
         }
       ]
     }
