@@ -10,57 +10,81 @@
             padding: 0;
             overflow: hidden;
             background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             font-family: system-ui, -apple-system, sans-serif;
         }
         canvas {
-            display: block;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            background-color: #88c478; /* Grass color */
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <canvas id="simCanvas"></canvas>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Configuration
-        const CYCLE_TIME = 4000; // 4 seconds per light state
+        // Simulation constants
+        const ROAD_HEIGHT = 120;
+        const CAR_WIDTH = 50;
+        const CAR_HEIGHT = 25;
+        const STOP_LINE_X_OFFSET = 200; // Distance from right edge
+        const LIGHT_CYCLE_DURATION = 4000; // 4 seconds
+        const SPAWN_INTERVAL = 1500; // Spawn car every 1.5s
         const CAR_SPEED = 3;
-        const CAR_WIDTH = 60;
-        const CAR_HEIGHT = 30;
-        const SPAWN_RATE = 1500; // New car every 1.5s (approx)
-        
-        // State
+        const SAFE_DISTANCE = 70; // Minimum distance between cars
+
         let width, height;
+        let trafficLight = {
+            state: 'green', // 'green' or 'red' (yellow optional but prompt said red/green)
+            timer: 0,
+            x: 0,
+            y: 0
+        };
+        let cars = [];
         let lastTime = 0;
-        let lightState = 'GREEN'; // 'GREEN' or 'RED'
-        let lightTimer = 0;
-        let lastSpawnTime = 0;
-        
+        let timeSinceLastSpawn = 0;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Update traffic light position
+            trafficLight.x = width - STOP_LINE_X_OFFSET;
+            trafficLight.y = height / 2 - ROAD_HEIGHT / 2 - 40;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
         class Car {
             constructor() {
-                this.width = CAR_WIDTH;
-                this.height = CAR_HEIGHT;
-                this.x = -this.width;
-                this.y = height / 2 + 10; // Bottom lane
+                this.x = -CAR_WIDTH;
+                this.y = height / 2 + (Math.random() * 20 - 10); // Slight lane variation
                 this.speed = CAR_SPEED;
-                this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
                 this.stopped = false;
+                this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
             }
 
-            update(cars, lightState) {
-                // Check if should stop for red light
-                const lightX = width * 0.7;
-                const distToLight = lightX - (this.x + this.width);
+            update(dt, carsAhead) {
+                // Check if we need to stop for a car ahead
+                let canMove = true;
                 
-                // Find car ahead
+                // Find the closest car ahead
                 let carAhead = null;
                 let minDist = Infinity;
                 
-                for (const other of cars) {
+                for (let other of carsAhead) {
                     if (other !== this && other.x > this.x) {
-                        const dist = other.x - (this.x + this.width);
+                        const dist = other.x - this.x;
                         if (dist < minDist) {
                             minDist = dist;
                             carAhead = other;
@@ -68,191 +92,193 @@
                     }
                 }
 
-                // Logic to stop
-                let shouldStop = false;
-
-                // Stop for light
-                if (lightState === 'RED' && distToLight > 0 && distToLight < 100) {
-                    shouldStop = true;
+                if (carAhead && (carAhead.x - this.x) < SAFE_DISTANCE) {
+                    canMove = false;
                 }
 
-                // Stop for car ahead
-                if (carAhead && minDist < 30) {
-                    shouldStop = true;
+                // Check for traffic light
+                const distToStopLine = (width - STOP_LINE_X_OFFSET) - (this.x + CAR_WIDTH);
+                
+                if (trafficLight.state === 'red' || trafficLight.state === 'yellow') {
+                     // Stop if close to line but not passed it
+                     if (distToStopLine > 0 && distToStopLine < 20) {
+                         canMove = false;
+                     }
                 }
 
-                if (shouldStop) {
-                    this.speed = Math.max(0, this.speed - 0.2);
+                if (canMove) {
+                    this.x += this.speed * (dt / 16); // Normalize to ~60fps
+                    this.stopped = false;
                 } else {
-                    this.speed = Math.min(CAR_SPEED, this.speed + 0.1);
+                    this.stopped = true;
                 }
-
-                this.x += this.speed;
             }
 
             draw() {
                 // Car body
                 ctx.fillStyle = this.color;
                 
-                // Modern rounded car shape
+                // Draw rounded rectangle for car
+                const radius = 5;
                 ctx.beginPath();
-                ctx.roundRect(this.x, this.y, this.width, this.height, 6);
+                ctx.moveTo(this.x + radius, this.y - CAR_HEIGHT/2);
+                ctx.lineTo(this.x + CAR_WIDTH - radius, this.y - CAR_HEIGHT/2);
+                ctx.quadraticCurveTo(this.x + CAR_WIDTH, this.y - CAR_HEIGHT/2, this.x + CAR_WIDTH, this.y - CAR_HEIGHT/2 + radius);
+                ctx.lineTo(this.x + CAR_WIDTH, this.y + CAR_HEIGHT/2 - radius);
+                ctx.quadraticCurveTo(this.x + CAR_WIDTH, this.y + CAR_HEIGHT/2, this.x + CAR_WIDTH - radius, this.y + CAR_HEIGHT/2);
+                ctx.lineTo(this.x + radius, this.y + CAR_HEIGHT/2);
+                ctx.quadraticCurveTo(this.x, this.y + CAR_HEIGHT/2, this.x, this.y + CAR_HEIGHT/2 - radius);
+                ctx.lineTo(this.x, this.y - CAR_HEIGHT/2 + radius);
+                ctx.quadraticCurveTo(this.x, this.y - CAR_HEIGHT/2, this.x + radius, this.y - CAR_HEIGHT/2);
                 ctx.fill();
-                
-                // Windows
-                ctx.fillStyle = '#333';
-                ctx.fillRect(this.x + 10, this.y + 4, 15, this.height - 8);
-                ctx.fillRect(this.x + 35, this.y + 4, 15, this.height - 8);
 
-                // Wheels
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(this.x + 12, this.y + this.height, 6, 0, Math.PI * 2);
-                ctx.arc(this.x + this.width - 12, this.y + this.height, 6, 0, Math.PI * 2);
-                ctx.fill();
+                // Windows
+                ctx.fillStyle = '#ccf';
+                ctx.fillRect(this.x + 10, this.y - CAR_HEIGHT/2 + 3, 10, CAR_HEIGHT - 6);
+                ctx.fillRect(this.x + 25, this.y - CAR_HEIGHT/2 + 3, 15, CAR_HEIGHT - 6);
+                
+                // Brake lights
+                if (this.stopped) {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = '#ff0000';
+                    ctx.fillRect(this.x, this.y - CAR_HEIGHT/2 + 2, 2, 6);
+                    ctx.fillRect(this.x, this.y + CAR_HEIGHT/2 - 8, 2, 6);
+                    ctx.shadowBlur = 0;
+                }
             }
         }
 
-        let cars = [];
-
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
-
-        function drawRoad() {
-            const laneY = height / 2;
-            
-            // Grass
-            ctx.fillStyle = '#8bc34a';
-            ctx.fillRect(0, 0, width, height);
-
-            // Road
-            ctx.fillStyle = '#555';
-            ctx.fillRect(0, laneY - 60, width, 120);
-
-            // Lane markings
-            ctx.strokeStyle = '#fff';
-            ctx.setLineDash([20, 20]);
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(0, laneY);
-            ctx.lineTo(width, laneY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            // Road edges
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(0, laneY - 58);
-            ctx.lineTo(width, laneY - 58);
-            ctx.moveTo(0, laneY + 58);
-            ctx.lineTo(width, laneY + 58);
-            ctx.stroke();
-        }
-
-        function drawTrafficLight() {
-            const lightX = width * 0.7;
-            const lightY = height / 2 - 120;
-            
-            // Pole
-            ctx.fillStyle = '#444';
-            ctx.fillRect(lightX - 5, lightY, 10, 120);
-            
-            // Box
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.roundRect(lightX - 20, lightY - 60, 40, 80, 5);
-            ctx.fill();
-
-            // Lights
-            // Red
-            ctx.fillStyle = lightState === 'RED' ? '#ff4444' : '#500';
-            ctx.shadowBlur = lightState === 'RED' ? 20 : 0;
-            ctx.shadowColor = '#ff4444';
-            ctx.beginPath();
-            ctx.arc(lightX, lightY - 40, 12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Green
-            ctx.fillStyle = lightState === 'GREEN' ? '#44ff44' : '#050';
-            ctx.shadowBlur = lightState === 'GREEN' ? 20 : 0;
-            ctx.shadowColor = '#44ff44';
-            ctx.beginPath();
-            ctx.arc(lightX, lightY - 10, 12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            
-            // Stop line on road
-            ctx.fillStyle = '#fff';
-            ctx.globalAlpha = 0.5;
-            ctx.fillRect(lightX, height/2 - 58, 10, 116);
-            ctx.globalAlpha = 1.0;
-        }
-
-        function loop(timestamp) {
-            const deltaTime = timestamp - lastTime;
+        function update(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = timestamp - lastTime;
             lastTime = timestamp;
 
-            // Update Light
-            lightTimer += deltaTime;
-            if (lightTimer > CYCLE_TIME) {
-                lightTimer = 0;
-                lightState = lightState === 'GREEN' ? 'RED' : 'GREEN';
+            // Update traffic light
+            trafficLight.timer += dt;
+            if (trafficLight.timer > LIGHT_CYCLE_DURATION) {
+                trafficLight.timer = 0;
+                // Simple state machine: Green -> Yellow -> Red -> Green
+                if (trafficLight.state === 'green') {
+                    trafficLight.state = 'yellow';
+                    trafficLight.timer = LIGHT_CYCLE_DURATION - 1000; // Yellow lasts 1s (hacky timer adjust)
+                } else if (trafficLight.state === 'yellow') {
+                    trafficLight.state = 'red';
+                    trafficLight.timer = 0;
+                } else {
+                    trafficLight.state = 'green';
+                }
             }
 
-            // Spawn Cars
-            if (timestamp - lastSpawnTime > SPAWN_RATE) {
-                // Only spawn if there's room
+            // Spawn cars
+            timeSinceLastSpawn += dt;
+            if (timeSinceLastSpawn > SPAWN_INTERVAL) {
+                // Only spawn if there is space at the start
                 let canSpawn = true;
-                for (const car of cars) {
-                    if (car.x < 100) {
+                for (let car of cars) {
+                    if (car.x < SAFE_DISTANCE) {
                         canSpawn = false;
                         break;
                     }
                 }
-                if (canSpawn) {
+                
+                if (canSpawn && Math.random() > 0.3) { // 70% chance to spawn when interval hits
                     cars.push(new Car());
-                    lastSpawnTime = timestamp;
+                    timeSinceLastSpawn = 0;
                 }
             }
 
-            // Draw
-            ctx.clearRect(0, 0, width, height);
-            
-            drawRoad();
-            drawTrafficLight();
+            // Update cars
+            // Sort by x position to make checking ahead easier? 
+            // Actually just need to check all cars for simplicity or sort. 
+            // Given low count, simple iteration is fine.
+            cars.forEach(car => car.update(dt, cars));
 
-            // Update and Draw Cars
-            for (let i = cars.length - 1; i >= 0; i--) {
-                const car = cars[i];
-                car.update(cars, lightState);
-                car.draw();
+            // Remove off-screen cars
+            cars = cars.filter(car => car.x < width + 100);
 
-                if (car.x > width) {
-                    cars.splice(i, 1);
-                }
-            }
-            
-            // Info text
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(10, 10, 160, 30);
-            ctx.fillStyle = '#fff';
-            ctx.font = '14px sans-serif';
-            ctx.fillText(`Light: ${lightState} (${Math.ceil((CYCLE_TIME - lightTimer)/1000)}s)`, 20, 30);
-
-            requestAnimationFrame(loop);
+            draw();
+            requestAnimationFrame(update);
         }
 
-        requestAnimationFrame(loop);
+        function draw() {
+            // Clear
+            ctx.fillStyle = '#88c478';
+            ctx.fillRect(0, 0, width, height);
 
+            // Draw Road
+            const roadY = height / 2 - ROAD_HEIGHT / 2;
+            ctx.fillStyle = '#444';
+            ctx.fillRect(0, roadY, width, ROAD_HEIGHT);
+
+            // Road markings
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([20, 20]);
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Stop line
+            const stopX = width - STOP_LINE_X_OFFSET;
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(stopX, roadY);
+            ctx.lineTo(stopX, roadY + ROAD_HEIGHT);
+            ctx.stroke();
+
+            // Traffic Light Pole
+            ctx.fillStyle = '#333';
+            ctx.fillRect(stopX + 20, roadY - 50, 10, 50);
+
+            // Traffic Light Box
+            ctx.fillStyle = '#222';
+            ctx.fillRect(stopX - 5, roadY - 110, 60, 60);
+
+            // Lights
+            const lightX = stopX + 25;
+            const lightRadius = 8;
+            
+            // Red
+            ctx.fillStyle = (trafficLight.state === 'red') ? '#ff0000' : '#550000';
+            if (trafficLight.state === 'red') {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ff0000';
+            }
+            ctx.beginPath();
+            ctx.arc(lightX, roadY - 95, lightRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Yellow
+            ctx.fillStyle = (trafficLight.state === 'yellow') ? '#ffff00' : '#555500';
+            if (trafficLight.state === 'yellow') {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ffff00';
+            }
+            ctx.beginPath();
+            ctx.arc(lightX, roadY - 75, lightRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Green
+            ctx.fillStyle = (trafficLight.state === 'green') ? '#00ff00' : '#005500';
+            if (trafficLight.state === 'green') {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00ff00';
+            }
+            ctx.beginPath();
+            ctx.arc(lightX, roadY - 55, lightRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Draw Cars
+            cars.forEach(car => car.draw());
+        }
+
+        requestAnimationFrame(update);
     </script>
 </body>
 </html>
