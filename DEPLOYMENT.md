@@ -82,6 +82,7 @@ After deployment, you can seed the database with initial projects:
 
 ## Environment Variables
 
+
 The application doesn't require environment variables for basic operation. All configuration is done through:
 - `wrangler.toml` for Cloudflare settings
 - `nuxt.config.ts` for application settings
