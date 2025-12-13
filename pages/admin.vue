@@ -35,129 +35,51 @@ const { data: submissionsData, refresh: refreshSubmissions } = await useFetch<{
   total: number
 }>(submissionsUrl, { watch: [submissionsUrl] })
 
-const selectedSubmission = ref<Submission | null>(null)
-const reviewerNotes = ref('')
-const isReviewing = ref(false)
-
 // Projects state
 const { data: projectsData, refresh: refreshProjects } = await useFetch<{
   projects: Project[]
   total: number
 }>('/api/projects')
 
+// Modal state
 const showProjectModal = ref(false)
 const editingProject = ref<Project | null>(null)
-const projectForm = ref({
-  id: '',
-  label: '',
-  folder: ''
-})
-const isSavingProject = ref(false)
+const showReviewModal = ref(false)
+const selectedSubmission = ref<Submission | null>(null)
+
+// Other state
 const isInitializing = ref(false)
 const isBackfilling = ref(false)
 const isSeeding = ref(false)
 const generatingThumbnailFor = ref<string | null>(null)
 
-// Submission functions
-async function handleReviewSubmission(status: 'approved' | 'rejected', thumbnail?: string) {
-  if (!selectedSubmission.value) return
-
-  isReviewing.value = true
+// Quick approve (without modal)
+async function quickApproveSubmission(submission: Submission) {
   try {
-    await $fetch(`/api/submissions/${selectedSubmission.value.id}`, {
+    await $fetch(`/api/submissions/${submission.id}`, {
       method: 'PUT',
-      body: {
-        status,
-        reviewerNotes: reviewerNotes.value || undefined,
-        thumbnail: thumbnail || undefined
-      }
+      body: { status: 'approved' }
     })
-
-    showSuccess(`Submission ${status === 'approved' ? 'approved' : 'rejected'} successfully`)
-    closeSubmissionModal()
+    showSuccess('Submission approved successfully')
     await refreshSubmissions()
   } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to update submission')
-  } finally {
-    isReviewing.value = false
+    showError(error.data?.statusMessage || 'Failed to approve submission')
   }
 }
 
-async function quickApproveSubmission(submission: Submission) {
-  if (!submission) return
+function openReviewModal(submission: Submission) {
   selectedSubmission.value = submission
-  reviewerNotes.value = submission.reviewerNotes || ''
-  await handleReviewSubmission('approved')
+  showReviewModal.value = true
 }
 
-function openSubmission(submission: Submission) {
-  selectedSubmission.value = submission
-  reviewerNotes.value = submission.reviewerNotes || ''
-}
-
-function closeSubmissionModal() {
-  selectedSubmission.value = null
-  reviewerNotes.value = ''
-}
-
-// Project functions
 function openCreateProject() {
   editingProject.value = null
-  projectForm.value = {
-    id: '',
-    label: '',
-    folder: ''
-  }
   showProjectModal.value = true
 }
 
 function openEditProject(project: Project) {
   editingProject.value = project
-  projectForm.value = {
-    id: project.id,
-    label: project.label,
-    folder: project.folder
-  }
   showProjectModal.value = true
-}
-
-function closeProjectModal() {
-  showProjectModal.value = false
-  editingProject.value = null
-  projectForm.value = {
-    id: '',
-    label: '',
-    folder: ''
-  }
-}
-
-async function saveProject() {
-  isSavingProject.value = true
-  try {
-    if (editingProject.value) {
-      await $fetch(`/api/admin/projects/${editingProject.value.id}`, {
-        method: 'PUT',
-        body: {
-          label: projectForm.value.label,
-          folder: projectForm.value.folder
-        }
-      })
-      showSuccess('Project updated successfully')
-    } else {
-      await $fetch('/api/admin/projects', {
-        method: 'POST',
-        body: projectForm.value
-      })
-      showSuccess('Project created successfully')
-    }
-
-    closeProjectModal()
-    await refreshProjects()
-  } catch (error: any) {
-    showError(error.data?.statusMessage || 'Failed to save project')
-  } finally {
-    isSavingProject.value = false
-  }
 }
 
 async function deleteProject(project: Project) {
@@ -258,10 +180,17 @@ async function generateThumbnailForSubmission(submissionId: string, event: Event
   }
 }
 
-// Format date helper
 function formatDate(dateString: string | undefined) {
   if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleString()
+}
+
+async function onProjectSaved() {
+  await refreshProjects()
+}
+
+async function onSubmissionReviewed() {
+  await refreshSubmissions()
 }
 </script>
 
@@ -344,8 +273,7 @@ function formatDate(dateString: string | undefined) {
 
       <div v-else-if="submissionsData.submissions.length === 0" class="text-center py-12">
         <div class="text-gray-500 text-lg">No {{ statusFilter === 'all' ? '' : statusFilter }} submissions{{
-          projectFilter ?
-          ' for this project' : '' }}</div>
+          projectFilter ? ' for this project' : '' }}</div>
       </div>
 
       <div v-else class="grid gap-4">
@@ -354,7 +282,7 @@ function formatDate(dateString: string | undefined) {
           class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer block">
           <div class="flex items-start gap-4">
             <!-- Thumbnail -->
-            <div class="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+            <div class="shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
               <img v-if="submission.thumbnail" :src="submission.thumbnail" :alt="submission.label"
                 class="w-full h-full object-cover" />
               <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
@@ -367,7 +295,7 @@ function formatDate(dateString: string | undefined) {
               <div class="flex items-center gap-3 mb-2">
                 <h3 class="text-lg font-semibold text-gray-900 truncate">{{ submission.label }}</h3>
                 <span :class="[
-                  'px-2 py-1 text-xs font-medium rounded-full flex-shrink-0',
+                  'px-2 py-1 text-xs font-medium rounded-full shrink-0',
                   submission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                     submission.status === 'approved' ? 'bg-green-100 text-green-800' :
                       'bg-red-100 text-red-800'
@@ -383,11 +311,11 @@ function formatDate(dateString: string | undefined) {
             </div>
 
             <!-- Actions -->
-            <div class="flex-shrink-0 flex flex-col gap-2">
-              <UButton color="neutral" variant="ghost" size="sm" @click.stop="openSubmission(submission)">
+            <div class="shrink-0 flex flex-col gap-2">
+              <UButton color="neutral" variant="ghost" size="sm" @click.stop="openReviewModal(submission)">
                 Review
               </UButton>
-              <UButton color="green" variant="ghost" size="sm" @click.stop="quickApproveSubmission(submission)">
+              <UButton color="success" variant="ghost" size="sm" @click.stop="quickApproveSubmission(submission)">
                 Approve
               </UButton>
               <UButton color="primary" variant="outline" size="sm" :loading="generatingThumbnailFor === submission.id"
@@ -404,13 +332,16 @@ function formatDate(dateString: string | undefined) {
     <!-- Projects Tab -->
     <div v-if="activeTab === 'projects'">
       <div class="mb-6 flex gap-3">
-        <UButton @click="openCreateProject" color="primary">
-          + Create Project
-        </UButton>
+        <UButton color="primary" @click="openCreateProject">+ Create Project</UButton>
         <UButton @click="initializeDefaultProjects" :disabled="isInitializing" color="neutral">
           Initialize Defaults
         </UButton>
       </div>
+
+      <!-- Project Form Modal -->
+      <ClientOnly>
+        <AdminProjectFormModal v-model:open="showProjectModal" :project="editingProject" @saved="onProjectSaved" />
+      </ClientOnly>
 
       <div v-if="!projectsData" class="text-center py-12">
         <div class="text-gray-500">Loading projects...</div>
@@ -445,12 +376,9 @@ function formatDate(dateString: string | undefined) {
     </div>
 
     <!-- Submission Review Modal -->
-    <AdminSubmissionReviewModal v-if="selectedSubmission" :submission="selectedSubmission"
-      v-model:reviewer-notes="reviewerNotes" :is-reviewing="isReviewing" @close="closeSubmissionModal"
-      @review="handleReviewSubmission" />
-
-    <!-- Project Form Modal -->
-    <AdminProjectFormModal :open="showProjectModal" :project="editingProject" v-model:form="projectForm"
-      :is-saving="isSavingProject" @close="closeProjectModal" @save="saveProject" />
+    <ClientOnly>
+      <AdminSubmissionReviewModal v-model:open="showReviewModal" :submission="selectedSubmission"
+        @reviewed="onSubmissionReviewed" />
+    </ClientOnly>
   </AppLayout>
 </template>

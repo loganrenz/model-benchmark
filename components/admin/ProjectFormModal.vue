@@ -1,118 +1,106 @@
 <script setup lang="ts">
 import type { Project } from '~/types/prompt'
 
-interface Props {
-  open: boolean
-  project: Project | null
-  form: {
-    id: string
-    label: string
-    folder: string
-  }
-  isSaving: boolean
-}
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<{
-  close: []
-  save: []
-  'update:form': [value: { id: string; label: string; folder: string }]
+const props = defineProps<{
+  project?: Project | null
 }>()
 
-const localForm = computed({
-  get: () => props.form,
-  set: (value) => emit('update:form', value)
-})
+const emit = defineEmits<{
+  saved: []
+}>()
 
-const isOpen = computed({
-  get: () => props.open,
-  set: (value) => {
-    if (!value) emit('close')
+const open = defineModel<boolean>('open', { default: false })
+
+const form = ref({
+  id: '',
+  label: '',
+  folder: ''
+})
+const isSaving = ref(false)
+const { showSuccess, showError } = useNotifications()
+
+// Reset form when modal opens
+watch(open, (isOpen) => {
+  if (isOpen) {
+    if (props.project) {
+      form.value = {
+        id: props.project.id,
+        label: props.project.label,
+        folder: props.project.folder
+      }
+    } else {
+      form.value = { id: '', label: '', folder: '' }
+    }
   }
 })
 
 const canSave = computed(() => {
-  return !props.isSaving && localForm.value.id && localForm.value.label && localForm.value.folder
+  return !isSaving.value && form.value.id && form.value.label && form.value.folder
 })
+
+async function save() {
+  isSaving.value = true
+  try {
+    if (props.project) {
+      await $fetch(`/api/admin/projects/${props.project.id}`, {
+        method: 'PUT',
+        body: {
+          label: form.value.label,
+          folder: form.value.folder
+        }
+      })
+      showSuccess('Project updated successfully')
+    } else {
+      await $fetch('/api/admin/projects', {
+        method: 'POST',
+        body: form.value
+      })
+      showSuccess('Project created successfully')
+    }
+    open.value = false
+    emit('saved')
+  } catch (error: any) {
+    showError(error.data?.statusMessage || 'Failed to save project')
+  } finally {
+    isSaving.value = false
+  }
+}
 </script>
 
 <template>
-  <UModal v-model:open="isOpen">
-    <template #content>
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3 class="text-xl font-bold text-gray-900">
-              {{ project ? 'Edit Project' : 'Create Project' }}
-            </h3>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              icon="i-heroicons-x-mark"
-              @click="emit('close')"
-            />
-          </div>
-        </template>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Project ID
-              <span class="text-red-500">*</span>
-            </label>
-            <UInput
-              v-model="localForm.id"
-              :disabled="!!project"
-              placeholder="e.g., my-new-project"
-            />
-            <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens only</p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Label
-              <span class="text-red-500">*</span>
-            </label>
-            <UInput
-              v-model="localForm.label"
-              placeholder="e.g., My New Project"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Folder
-              <span class="text-red-500">*</span>
-            </label>
-            <UInput
-              v-model="localForm.folder"
-              placeholder="e.g., my-new-project"
-            />
-            <p class="mt-1 text-xs text-gray-500">Folder name in public/projects/</p>
-          </div>
+  <UModal v-model:open="open" :title="project ? 'Edit Project' : 'Create Project'" :ui="{ footer: 'justify-end' }">
+    <template #body>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Project ID <span class="text-red-500">*</span>
+          </label>
+          <UInput v-model="form.id" :disabled="!!project" placeholder="e.g., my-new-project" />
+          <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens only</p>
         </div>
 
-        <template #footer>
-          <div class="flex justify-end gap-3">
-            <UButton
-              color="primary"
-              :disabled="!canSave"
-              @click="emit('save')"
-            >
-              {{ project ? 'Update' : 'Create' }}
-            </UButton>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              :disabled="isSaving"
-              @click="emit('close')"
-            >
-              Cancel
-            </UButton>
-          </div>
-        </template>
-      </UCard>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Label <span class="text-red-500">*</span>
+          </label>
+          <UInput v-model="form.label" placeholder="e.g., My New Project" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Folder <span class="text-red-500">*</span>
+          </label>
+          <UInput v-model="form.folder" placeholder="e.g., my-new-project" />
+          <p class="mt-1 text-xs text-gray-500">Folder name in public/projects/</p>
+        </div>
+      </div>
+    </template>
+
+    <template #footer>
+      <UButton color="neutral" variant="outline" @click="open = false">Cancel</UButton>
+      <UButton color="primary" :disabled="!canSave" :loading="isSaving" @click="save">
+        {{ project ? 'Update' : 'Create' }}
+      </UButton>
     </template>
   </UModal>
 </template>

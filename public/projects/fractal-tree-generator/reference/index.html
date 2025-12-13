@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="treeCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height - 50;
+
+        // Tree parameters
+        const maxDepth = 8;
+        const branchAngle = Math.PI / 6; // 30 degrees
+        const branchLength = 120;
+        const animationSpeed = 0.02;
+
+        let animationTime = 0;
+
+        function drawBranch(x, y, angle, length, depth, progress) {
+            if (depth === 0 || length < 2) return;
+
+            const endX = x + Math.cos(angle) * length * progress;
+            const endY = y + Math.sin(angle) * length * progress;
+
+            // Color gradient from brown to green
+            const ratio = depth / maxDepth;
+            const r = Math.floor(139 - (139 - 34) * (1 - ratio));
+            const g = Math.floor(69 - (69 - 139) * (1 - ratio));
+            const b = Math.floor(19 + (139 - 19) * (1 - ratio));
+
+            ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.lineWidth = Math.max(1, depth * 1.5);
+            ctx.lineCap = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Draw sub-branches with slight angle variations
+            if (progress > 0.8) {
+                const leftAngle = angle - branchAngle + (Math.sin(animationTime + depth) * 0.1);
+                const rightAngle = angle + branchAngle + (Math.sin(animationTime + depth + Math.PI) * 0.1);
+                const newLength = length * 0.7;
+
+                drawBranch(endX, endY, leftAngle, newLength, depth - 1, 1);
+                drawBranch(endX, endY, rightAngle, newLength, depth - 1, 1);
+
+                // Sometimes add a third branch for more organic look
+                if (Math.random() > 0.7 && depth > 2) {
+                    const midAngle = angle + (Math.random() - 0.5) * branchAngle;
+                    drawBranch(endX, endY, midAngle, newLength * 0.8, depth - 1, 1);
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+
+            // Calculate animation progress (0 to 1)
+            const progress = Math.min(1, animationTime * animationSpeed);
+
+            drawBranch(centerX, centerY, -Math.PI / 2, branchLength, maxDepth, progress);
+
+            animationTime += 1;
+
+            // Add gentle wind effect
+            const windOffset = Math.sin(animationTime * 0.05) * 2;
+            ctx.save();
+            ctx.translate(windOffset, 0);
+            ctx.restore();
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

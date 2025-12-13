@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pathfinding Algorithm Visualizer</title>
+  <style>
+    :root {
+      --cell-size: 22px;
+      --grid-gap: 2px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f6f7fb;
+      color: #1f2937;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 1.15rem; margin: 0; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+      padding: 8px; border-radius: 8px;
+      background: #fff; border: 1px solid #e5e7eb;
+    }
+    .toolbar label { font-size: 0.92rem; color: #374151; }
+    .toolbar select, .toolbar input[type="range"] {
+      font-size: 0.9rem;
+      padding: 6px 8px; border-radius: 6px; border: 1px solid #d1d5db;
+      background: #fff;
+    }
+    .mode-buttons { display: inline-flex; gap: 6px; align-items: center; }
+    .mode-btn {
+      padding: 6px 10px; border-radius: 6px; border: 1px solid #d1d5db;
+      background: #f3f4f6; cursor: pointer;
+    }
+    .mode-btn.active { background: #e5e7eb; font-weight: bold; }
+    #btn-run, #btn-clear-walls, #btn-reset {
+      padding: 8px 12px; border-radius: 6px; border: 1px solid #d1d5db;
+      background: #111827; color: #fff; cursor: pointer;
+    }
+    #btn-run:disabled { opacity: 0.6; cursor: not-allowed; }
+    #grid {
+      margin-top: 12px;
+      display: grid;
+      grid-gap: var(--grid-gap);
+      background: #6b7280;
+      padding: 6px;
+      border-radius: 8px;
+    }
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      transition: background 0.2s ease;
+    }
+    .cell.wall { background: #374151; }
+    .cell.start { background: #10b981; }
+    .cell.end { background: #ef4444; }
+    .cell.visited { background: #93c5fd; }
+    .cell.path { background: #facc15; }
+    .legend { display: flex; gap: 12px; align-items: center; font-size: 0.9rem; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; background: #fff; border: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pathfinding Algorithm Visualizer</h1>
+    <div class="legend" aria-label="legend">
+      <span><span class="dot" style="width:14px;height:14px;background:#fff;border:1px solid #ddd;display:inline-block"></span> Normal</span>
+      <span><span class="dot" style="width:14px;height:14px;background:#374151;display:inline-block"></span> Wall</span>
+      <span><span class="dot" style="width:14px;height:14px;background:#10b981;display:inline-block"></span> Start</span>
+      <span><span class="dot" style="width:14px;height:14px;background:#ef4444;display:inline-block"></span> End</span>
+      <span><span class="dot" style="width:14px;height:14px;background:#93c5fd;display:inline-block"></span> Visited</span>
+      <span><span class="dot" style="width:14px;height:14px;background:#facc15;display:inline-block"></span> Path</span>
+    </div>
+  </header>
+
+  <div class="toolbar" role="region" aria-label="controls">
+    <label>
+      Algorithm
+      <select id="algorithm" title="Algorithm to visualize">
+        <option value="bfs">BFS</option>
+        <option value="dijkstra">Dijkstra</option>
+        <option value="astar">A*</option>
+      </select>
+    </label>
+    <div class="mode-buttons" aria-label="mode">
+      <button id="mode-wall" class="mode-btn active" data-mode="wall">Wall</button>
+      <button id="mode-start" class="mode-btn" data-mode="start">Set Start</button>
+      <button id="mode-end" class="mode-btn" data-mode="end">Set End</button>
+    </div>
+    <button id="btn-run" title="Run the selected algorithm">Run</button>
+    <button id="btn-clear-walls" title="Clear all walls">Clear Walls</button>
+    <button id="btn-reset" title="Reset grid to initial state">Reset</button>
+    <label title="Animation speed">
+      Speed
+      <input type="range" id="speed" min="1" max="100" value="40" />
+    </label>
+  </div>
+
+  <div id="grid" aria-label="grid" style="width: 0; height: 0;"></div>
+
+  <script>
+    // Configuration
+    const ROWS = 25;
+    const COLS = 25;
+    const gridElement = document.getElementById('grid');
+    const algorithmSelect = document.getElementById('algorithm');
+    const speedSlider = document.getElementById('speed');
+    const runButton = document.getElementById('btn-run');
+    const clearWallsButton = document.getElementById('btn-clear-walls');
+    const resetButton = document.getElementById('btn-reset');
+    const modeWallBtn = document.getElementById('mode-wall');
+    const modeStartBtn = document.getElementById('mode-start');
+    const modeEndBtn = document.getElementById('mode-end');
+
+    // State
+    let gridState = [];
+    let gridCells = []; // DOM elements
+    let startRow = 0, startCol = 0;
+    let endRow = ROWS - 1, endCol = COLS - 1;
+    let currentMode = 'wall'; // wall, start, end
+    let isMouseDown = false;
+
+    // Initialize DOM grid
+    function initGrid() {
+      gridElement.style.setProperty('width', `${COLS * (22 + 2)}px`);
+      gridElement.style.setProperty('height', 'fit-content');
+      gridElement.style.display = 'grid';
+      gridElement.style.gridTemplateColumns = `repeat(${COLS}, 22px)`;
+
+      gridState = Array.from({ length: ROWS }, () =>
+        Array.from({ length: COLS }, () => ({
+          isWall: false,
+        }))
+      );
+      gridCells = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+      gridElement.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.addEventListener('mousedown', (e) => onCellMouseDown(r, c, e));
+          cell.addEventListener('mouseenter', () => onCellMouseEnter(r, c));
+          cell.addEventListener('mouseup', () => { /* no-op */ });
+          gridElement.appendChild(cell);
+          gridCells[r][c] = cell;
+        }
+      }
+      // Initialize start/end visuals
+      gridCells[startRow][startCol].classList.add('start');
+      gridCells[endRow][endCol].classList.add('end');
+    }
+
+    function onCellMouseDown(r, c, ev) {
+      ev.preventDefault();
+      isMouseDown = true;
+      if (currentMode === 'wall') toggleWall(r, c);
+      else if (currentMode === 'start') setStart(r, c);
+      else if (currentMode === 'end') setEnd(r, c);
+    }
+
+    function onCellMouseEnter(r, c) {
+      if (!isMouseDown) return;
+      if (currentMode === 'wall') {
+        toggleWall(r, c);
+      }
+    }
+
+    document.addEventListener('mouseup', () => { isMouseDown = false; });
+
+    // Mode handlers
+    function setMode(mode) {
+      currentMode = mode;
+      [modeWallBtn, modeStartBtn, modeEndBtn].forEach(btn => btn.classList.remove('active'));
+      if (mode === 'wall') modeWallBtn.classList.add('active');
+      if (mode === 'start') modeStartBtn.classList.add('active');
+      if (mode === 'end') modeEndBtn.classList.add('active');
+    }
+    modeWallBtn.addEventListener('click', () => setMode('wall'));
+    modeStartBtn.addEventListener('click', () => setMode('start'));
+    modeEndBtn.addEventListener('click', () => setMode('end'));
+
+    // Helpers to modify grid state
+    function toggleWall(r, c) {
+      if ((r === startRow && c === startCol) || (r === endRow && c === endCol)) return;
+      gridState[r][c].isWall = !gridState[r][c].isWall;
+      gridCells[r][c].classList.toggle('wall', gridState[r][c].isWall);
+    }
+
+    function setStart(r, c) {
+      // clear old start
+      gridCells[startRow][startCol].classList.remove('start');
+      gridState[startRow][startCol].isStart = false;
+      startRow = r; startCol = c;
+      gridCells[startRow][startCol].classList.add('start');
+    }
+
+    function setEnd(r, c) {
+      gridCells[endRow][endCol].classList.remove('end');
+      endRow = r; endCol = c;
+      gridCells[endRow][endCol].classList.add('end');
+    }
+
+    // Grid utilities
+    function resetGridState() {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          gridState[r][c].isWall = false;
+        }
+      }
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          gridCells[r][c].classList.remove('wall', 'visited', 'path', 'start', 'end');
+        }
+      }
+      gridCells[startRow][startCol].classList.add('start');
+      gridCells[endRow][endCol].classList.add('end');
+    }
+
+    function clearWallsOnly() {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (gridState[r][c].isWall) {
+            gridState[r][c].isWall = false;
+            gridCells[r][c].classList.remove('wall', 'visited', 'path');
+          }
+        }
+      }
+    }
+
+    function resetAll() {
+      // reset walls and visitation/path decorations
+      resetGridState();
+      // keep start/end in place
+      // Reset path/visited classes
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          gridCells[r][c].classList.remove('visited', 'path');
+        }
+      }
+    }
+
+    // Pathfinding core
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function getNeighbors(r, c) {
+      const dirs = [
+        [-1, 0], [1, 0], [0, -1], [0, 1]
+      ];
+      const res = [];
+      for (const [dr, dc] of dirs) {
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !gridState[nr][nc].isWall) {
+          res.push([nr, nc]);
+        }
+      }
+      return res;
+    }
+
+    async function animateVisited(nodes, delayMs) {
+      for (const [r, c] of nodes) {
+        if ((r === startRow && c === startCol) || (r === endRow && c === endCol)) continue;
+        gridCells[r][c].classList.add('visited');
+        await sleep(delayMs);
+      }
+    }
+
+    async function animatePath(path, delayMs) {
+      for (let i = 1; i < path.length - 0; i++) {
+        const [r, c] = path[i];
+        if ((r === startRow && c === startCol) || (r === endRow && c === endCol)) continue;
+        gridCells[r][c].classList.add('path');
+        await sleep(delayMs);
+      }
+    }
+
+    function reconstructPath(parent, end) {
+      const path = [];
+      let cur = end;
+      while (cur) {
+        path.unshift(cur);
+        cur = parent[cur[0]][cur[1]];
+      }
+      // path[0] is start
+      return path;
+    }
+
+    async function runBFS() {
+      const start = [startRow, startCol];
+      const end = [endRow, endCol];
+      const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+      const parent = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      const queue = [start];
+      visited[start[0]][start[1]] = true;
+      const visitedOrder = [];
+
+      while (queue.length > 0) {
+        const [r, c] = queue.shift();
+        if (r === end[0] && c === end[1]) break;
+        for (const [nr, nc] of getNeighbors(r, c)) {
+          if (!visited[nr][nc]) {
+            visited[nr][nc] = true;
+            parent[nr][nc] = [r, c];
+            queue.push([nr, nc]);
+            visitedOrder.push([nr, nc]);
+          }
+        }
+      }
+      let path = [];
+      if (visited[end[0]][end[1]]) {
+        path = reconstructPath(parent, end);
+      }
+      const delayMs = Math.max(5, 120 - Math.floor(speedSlider.value * 1.0));
+      await animateVisited(visitedOrder, delayMs);
+      await animatePath(path, delayMs);
+      return { path };
+    }
+
+    async function runDijkstra() {
+      const start = [startRow, startCol];
+      const end = [endRow, endCol];
+      const bestG = Array.from({ length: ROWS }, () => Array(COLS).fill(Infinity));
+      const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+      const parent = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      const queue = [];
+      bestG[start[0]][start[1]] = 0;
+      queue.push([start[0], start[1]]);
+      const visitedOrder = [];
+
+      while (queue.length > 0) {
+        // sort by g cost
+        queue.sort((a, b) => bestG[a[0]][a[1]] - bestG[b[0]][b[1]]);
+        const [r, c] = queue.shift();
+        if (visited[r][c]) continue;
+        visited[r][c] = true;
+        if (!(r === startRow && c === startCol) && !(r === endRow && c === endCol)) {
+          visitedOrder.push([r, c]);
+        }
+        if (r === end[0] && c === end[1]) break;
+        for (const [nr, nc] of getNeighbors(r, c)) {
+          const ng = bestG[r][c] + 1;
+          if (ng < bestG[nr][nc]) {
+            bestG[nr][nc] = ng;
+            parent[nr][nc] = [r, c];
+            queue.push([nr, nc]);
+          }
+        }
+      }
+      let path = [];
+      if (visited[end[0]][end[1]]) {
+        path = reconstructPath(parent, end);
+      }
+      const delayMs = Math.max(5, 120 - Math.floor(speedSlider.value * 1.0));
+      await animateVisited(visitedOrder, delayMs);
+      await animatePath(path, delayMs);
+      return { path };
+    }
+
+    async function runAStar() {
+      const start = [startRow, startCol];
+      const end = [endRow, endCol];
+      const openSet = [];
+      const gScore = Array.from({ length: ROWS }, () => Array(COLS).fill(Infinity));
+      const fScore = Array.from({ length: ROWS }, () => Array(COLS).fill(Infinity));
+      const parent = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      const manhattan = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+      gScore[start[0]][start[1]] = 0;
+      fScore[start[0]][start[1]] = manhattan(start, end);
+      openSet.push([start[0], start[1]]);
+      const visitedOrder = [];
+      const closed = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+
+      while (openSet.length > 0) {
+        // pick with lowest fScore
+        openSet.sort((a, b) => fScore[a[0]][a[1]] - fScore[b[0]][b[1]]);
+        const [r, c] = openSet.shift();
+        if (closed[r][c]) continue;
+        closed[r][c] = true;
+        if (!(r === startRow && c === startCol) && !(r === endRow && c === endCol)) {
+          visitedOrder.push([r, c]);
+        }
+        if (r === end[0] && c === end[1]) break;
+        for (const [nr, nc] of getNeighbors(r, c)) {
+          const tentativeG = gScore[r][c] + 1;
+          if (tentativeG < gScore[nr][nc]) {
+            parent[nr][nc] = [r, c];
+            gScore[nr][nc] = tentativeG;
+            fScore[nr][nc] = tentativeG + manhattan([nr, nc], end);
+            openSet.push([nr, nc]);
+          }
+        }
+      }
+      let path = [];
+      if (closed[end[0]][end[1]] || (start[0] === end[0] && start[1] === end[1])) {
+        // Reconstruct path
+        path = [];
+        let cur = end;
+        while (cur) {
+          path.unshift(cur);
+          cur = parent[cur[0]][cur[1]];
+        }
+      }
+      const delayMs = Math.max(5, 120 - Math.floor(speedSlider.value * 1.0));
+      await animateVisited(visitedOrder, delayMs);
+      await animatePath(path, delayMs);
+      return { path };
+    }
+
+    async function runAlgorithm() {
+      // Clear previous visuals but keep start/end
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          gridCells[r][c].classList.remove('visited', 'path');
+        }
+      }
+      const algo = algorithmSelect.value;
+      if (algo === 'bfs') return await runBFS();
+      if (algo === 'dijkstra') return await runDijkstra();
+      if (algo === 'astar') return await runAStar();
+    }
+
+    // Init
+    initGrid();
+    // Bind Run
+    runButton.addEventListener('click', async () => {
+      runButton.disabled = true;
+      await runAlgorithm();
+      runButton.disabled = false;
+    });
+    clearWallsButton.addEventListener('click', () => {
+      clearWallsOnly();
+    });
+    resetButton.addEventListener('click', () => {
+      resetAll();
+    });
+    // Initialize to a visually clear grid
+    // Ensure grid is built before interactions
+  </script>
+</body>
+</html>
+
