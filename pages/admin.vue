@@ -340,7 +340,7 @@ async function onSubmissionReviewed() {
 
       <!-- Project Form Modal -->
       <ClientOnly>
-        <AdminProjectFormModal v-model:open="showProjectModal" :project="editingProject" @saved="onProjectSaved" />
+        <AdminProjectFormModal :open="showProjectModal" @update:open="showProjectModal = $event" :project="editingProject" @saved="onProjectSaved" />
       </ClientOnly>
 
       <div v-if="!projectsData" class="text-center py-12">
@@ -377,7 +377,7 @@ async function onSubmissionReviewed() {
 
     <!-- Submission Review Modal -->
     <ClientOnly>
-      <AdminSubmissionReviewModal v-model:open="showReviewModal" :submission="selectedSubmission"
+      <AdminSubmissionReviewModal :open="showReviewModal" @update:open="showReviewModal = $event" :submission="selectedSubmission"
         @reviewed="onSubmissionReviewed" />
     </ClientOnly>
   </AppLayout>

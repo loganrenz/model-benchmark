@@ -134,6 +134,49 @@ function openInNewTab() {
     setTimeout(() => URL.revokeObjectURL(url), 100)
   }
 }
+
+// Mobile scaling for wide content
+const iframeContainerRef = ref<HTMLElement | null>(null)
+const iframeScale = ref(1)
+const scaledHeight = ref('100%')
+const isMobile = ref(false)
+const DESIGN_WIDTH = 1024 // Assume content designed for this width
+
+function updateScale() {
+  if (typeof window === 'undefined') return
+  
+  isMobile.value = window.innerWidth < 1024
+  
+  if (isMobile.value && iframeContainerRef.value) {
+    const containerWidth = iframeContainerRef.value.clientWidth
+    const containerHeight = iframeContainerRef.value.clientHeight
+    // Scale down if viewport is smaller than design width
+    if (containerWidth < DESIGN_WIDTH) {
+      iframeScale.value = containerWidth / DESIGN_WIDTH
+      // Height needs to be the container height divided by the scale factor
+      // so that when scaled, it fits the container exactly
+      scaledHeight.value = `${containerHeight / iframeScale.value}px`
+    } else {
+      iframeScale.value = 1
+      scaledHeight.value = '100%'
+    }
+  } else {
+    iframeScale.value = 1
+    scaledHeight.value = '100%'
+  }
+}
+
+onMounted(() => {
+  // Initial update after DOM is ready
+  nextTick(() => {
+    updateScale()
+  })
+  window.addEventListener('resize', updateScale)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateScale)
+})
 </script>
 
 <template>
@@ -279,21 +322,37 @@ function openInNewTab() {
           '-translate-x-8': isTransitioning && transitionDirection === 'right'
         }"
       >
-        <div class="size-full rounded-none lg:rounded-2xl overflow-hidden bg-white shadow-2xl shadow-black/50 ring-1 ring-white/10">
-          <iframe
-            v-if="submissionSrc"
-            :src="submissionSrc"
-            :title="submissionLabel"
-            class="size-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
-          <iframe
-            v-else-if="submissionHtmlContent"
-            :srcdoc="submissionHtmlContent"
-            :title="submissionLabel"
-            class="size-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
+        <div 
+          ref="iframeContainerRef"
+          class="size-full rounded-none lg:rounded-2xl overflow-hidden bg-white shadow-2xl shadow-black/50 ring-1 ring-white/10"
+        >
+          <!-- Scaled iframe wrapper for mobile -->
+          <div 
+            class="origin-top-left lg:size-full"
+            :style="isMobile ? {
+              width: `${DESIGN_WIDTH}px`,
+              height: scaledHeight,
+              transform: `scale(${iframeScale})`,
+            } : {
+              width: '100%',
+              height: '100%'
+            }"
+          >
+            <iframe
+              v-if="submissionSrc"
+              :src="submissionSrc"
+              :title="submissionLabel"
+              class="size-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+            <iframe
+              v-else-if="submissionHtmlContent"
+              :srcdoc="submissionHtmlContent"
+              :title="submissionLabel"
+              class="size-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+          </div>
         </div>
       </div>
 

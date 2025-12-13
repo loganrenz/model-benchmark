@@ -3,21 +3,26 @@ import type { Submission } from '~/types/submission'
 
 const props = defineProps<{
   submission?: Submission | null
+  open: boolean
 }>()
 
 const emit = defineEmits<{
   reviewed: []
+  'update:open': [value: boolean]
 }>()
 
-const open = defineModel<boolean>('open', { default: false })
+const isOpen = computed({
+  get: () => props.open,
+  set: (value) => emit('update:open', value)
+})
 
 const reviewerNotes = ref('')
 const isReviewing = ref(false)
 const { showSuccess, showError } = useNotifications()
 
 // Reset notes when modal opens
-watch(open, (isOpen) => {
-  if (isOpen && props.submission) {
+watch(() => props.open, (isOpenValue) => {
+  if (isOpenValue && props.submission) {
     reviewerNotes.value = props.submission.reviewerNotes || ''
   }
 })
@@ -41,7 +46,7 @@ async function handleReview(status: 'approved' | 'rejected') {
     })
 
     showSuccess(`Submission ${status === 'approved' ? 'approved' : 'rejected'} successfully`)
-    open.value = false
+    isOpen.value = false
     emit('reviewed')
   } catch (error: any) {
     showError(error.data?.statusMessage || 'Failed to update submission')
@@ -49,10 +54,14 @@ async function handleReview(status: 'approved' | 'rejected') {
     isReviewing.value = false
   }
 }
+
+function closeModal() {
+  isOpen.value = false
+}
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Review Submission" :ui="{ footer: 'justify-end' }">
+  <UModal v-model:open="isOpen" title="Review Submission" :ui="{ footer: 'justify-end' }">
     <template #body>
       <div v-if="submission" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
@@ -89,7 +98,7 @@ async function handleReview(status: 'approved' | 'rejected') {
     </template>
 
     <template #footer>
-      <UButton color="neutral" variant="outline" :disabled="isReviewing" @click="open = false">
+      <UButton color="neutral" variant="outline" :disabled="isReviewing" @click="closeModal">
         Cancel
       </UButton>
       <UButton color="error" variant="soft" :disabled="isReviewing" :loading="isReviewing" @click="handleReview('rejected')">
