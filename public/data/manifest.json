@@ -18,6 +18,9 @@
           "file": "claude-sonnet-45/index.html"
         },
         {
+          "id": "agent-claude-opus-4",
+          "label": "Claude Opus 4",
+          "file": "agent-claude-opus-4/index.html"
           "id": "agent-gpt-5.2",
           "label": "GPT-5.2",
           "file": "agent-gpt-5.2/index.html"
