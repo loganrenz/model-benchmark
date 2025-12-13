@@ -31,6 +31,11 @@
           "id": "agent-gemini-3-pro-preview",
           "label": "Gemini 3 Pro Preview",
           "file": "agent-gemini-3-pro-preview/index.html"
+        },
+        {
+          "id": "agent-composer",
+          "label": "Composer",
+          "file": "agent-composer/index.html"
         }
       ]
     },
@@ -63,6 +68,11 @@
           "id": "agent-gemini-3-pro-preview",
           "label": "Gemini 3 Pro Preview",
           "file": "agent-gemini-3-pro-preview/index.html"
+        },
+        {
+          "id": "agent-composer",
+          "label": "Composer",
+          "file": "agent-composer/index.html"
         }
       ]
     },
@@ -95,6 +105,11 @@
           "id": "agent-gemini-3-pro-preview",
           "label": "Gemini 3 Pro Preview",
           "file": "agent-gemini-3-pro-preview/index.html"
+        },
+        {
+          "id": "agent-composer",
+          "label": "Composer",
+          "file": "agent-composer/index.html"
         }
       ]
     }
