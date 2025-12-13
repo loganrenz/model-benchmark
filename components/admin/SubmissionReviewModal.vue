@@ -75,106 +75,108 @@ async function handleReview(status: 'approved' | 'rejected') {
 </script>
 
 <template>
-  <UModal :model-value="!!submission" @update:model-value="(val) => !val && emit('close')">
-    <UCard>
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-2xl font-bold text-gray-900">Review Submission</h3>
-          <UButton
-            color="gray"
-            variant="ghost"
-            icon="i-heroicons-x-mark"
-            @click="emit('close')"
-          />
-        </div>
-      </template>
-
-      <div v-if="submission" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Project</label>
-            <div class="mt-1 text-sm text-gray-900">{{ submission.projectId }}</div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Agent Name</label>
-            <div class="mt-1 text-sm text-gray-900">{{ submission.agentName }}</div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Label</label>
-            <div class="mt-1 text-sm text-gray-900">{{ submission.label }}</div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Submitted</label>
-            <div class="mt-1 text-sm text-gray-900">{{ formatDate(submission.submittedAt) }}</div>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Reviewer Notes</label>
-          <UTextarea
-            v-model="localNotes"
-            rows="3"
-            placeholder="Add notes about this submission..."
-          />
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="block text-sm font-medium text-gray-700">Preview</label>
+  <UModal :open="!!submission" @update:open="(val) => !val && emit('close')">
+    <template #content>
+      <UCard>
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-2xl font-bold text-gray-900">Review Submission</h3>
             <UButton
-              size="xs"
-              color="gray"
-              variant="outline"
-              :loading="isGeneratingThumbnail"
-              @click="generateThumbnail"
-            >
-              {{ thumbnailDataUrl ? 'Regenerate' : 'Generate' }} Thumbnail
-            </UButton>
-          </div>
-          <div class="border border-gray-300 rounded-lg overflow-hidden" style="height: 600px;">
-            <iframe
-              ref="iframeRef"
-              :srcdoc="submission.htmlContent"
-              class="w-full h-full"
-              title="Submission Preview"
+              color="neutral"
+              variant="ghost"
+              icon="i-heroicons-x-mark"
+              @click="emit('close')"
             />
           </div>
-          <div v-if="thumbnailDataUrl" class="mt-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Generated Thumbnail</label>
-            <img :src="thumbnailDataUrl" alt="Thumbnail preview" class="border border-gray-300 rounded" style="max-width: 200px;" />
+        </template>
+
+        <div v-if="submission" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Project</label>
+              <div class="mt-1 text-sm text-gray-900">{{ submission.projectId }}</div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Agent Name</label>
+              <div class="mt-1 text-sm text-gray-900">{{ submission.agentName }}</div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Label</label>
+              <div class="mt-1 text-sm text-gray-900">{{ submission.label }}</div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Submitted</label>
+              <div class="mt-1 text-sm text-gray-900">{{ formatDate(submission.submittedAt) }}</div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Reviewer Notes</label>
+            <UTextarea
+              v-model="localNotes"
+              :rows="3"
+              placeholder="Add notes about this submission..."
+            />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700">Preview</label>
+              <UButton
+                size="xs"
+                color="neutral"
+                variant="outline"
+                :loading="isGeneratingThumbnail"
+                @click="generateThumbnail"
+              >
+                {{ thumbnailDataUrl ? 'Regenerate' : 'Generate' }} Thumbnail
+              </UButton>
+            </div>
+            <div class="border border-gray-300 rounded-lg overflow-hidden" style="height: 600px;">
+              <iframe
+                ref="iframeRef"
+                :srcdoc="submission.htmlContent"
+                class="w-full h-full"
+                title="Submission Preview"
+              />
+            </div>
+            <div v-if="thumbnailDataUrl" class="mt-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Generated Thumbnail</label>
+              <img :src="thumbnailDataUrl" alt="Thumbnail preview" class="border border-gray-300 rounded" style="max-width: 200px;" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <UButton
-            color="green"
-            :disabled="isReviewing || isGeneratingThumbnail"
-            :loading="isReviewing"
-            @click="handleReview('approved')"
-          >
-            Approve
-          </UButton>
-          <UButton
-            color="red"
-            :disabled="isReviewing || isGeneratingThumbnail"
-            :loading="isReviewing"
-            @click="handleReview('rejected')"
-          >
-            Reject
-          </UButton>
-          <UButton
-            color="gray"
-            variant="ghost"
-            :disabled="isReviewing || isGeneratingThumbnail"
-            @click="emit('close')"
-          >
-            Cancel
-          </UButton>
-        </div>
-      </template>
-    </UCard>
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton
+              color="success"
+              :disabled="isReviewing || isGeneratingThumbnail"
+              :loading="isReviewing"
+              @click="handleReview('approved')"
+            >
+              Approve
+            </UButton>
+            <UButton
+              color="error"
+              :disabled="isReviewing || isGeneratingThumbnail"
+              :loading="isReviewing"
+              @click="handleReview('rejected')"
+            >
+              Reject
+            </UButton>
+            <UButton
+              color="neutral"
+              variant="ghost"
+              :disabled="isReviewing || isGeneratingThumbnail"
+              @click="emit('close')"
+            >
+              Cancel
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </template>
   </UModal>
 </template>
 

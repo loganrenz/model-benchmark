@@ -259,14 +259,14 @@ function formatDate(dateString: string | undefined) {
           <UButton
             @click="seedSubmissions"
             :disabled="isSeeding"
-            color="green"
+            color="success"
           >
             {{ isSeeding ? 'Seeding...' : 'Seed Test Submissions' }}
           </UButton>
           <UButton
             @click="backfillThumbnails"
             :disabled="isBackfilling"
-            color="indigo"
+            color="primary"
           >
             {{ isBackfilling ? 'Backfilling...' : 'Backfill Thumbnails' }}
           </UButton>
@@ -301,7 +301,7 @@ function formatDate(dateString: string | undefined) {
                 </div>
               </div>
               <UButton
-                color="gray"
+                color="neutral"
                 variant="ghost"
                 @click.stop="openSubmission(submission)"
               >
@@ -317,14 +317,14 @@ function formatDate(dateString: string | undefined) {
         <div class="mb-6 flex gap-3">
           <UButton
             @click="openCreateProject"
-            color="indigo"
+            color="primary"
           >
             + Create Project
           </UButton>
           <UButton
             @click="initializeDefaultProjects"
             :disabled="isInitializing"
-            color="gray"
+            color="neutral"
           >
             Initialize Defaults
           </UButton>
@@ -352,7 +352,7 @@ function formatDate(dateString: string | undefined) {
               <div class="flex gap-2">
                 <UButton
                   @click="openEditProject(project)"
-                  color="indigo"
+                  color="primary"
                   variant="ghost"
                   size="sm"
                 >
@@ -360,7 +360,7 @@ function formatDate(dateString: string | undefined) {
                 </UButton>
                 <UButton
                   @click="deleteProject(project)"
-                  color="red"
+                  color="error"
                   variant="ghost"
                   size="sm"
                 >
