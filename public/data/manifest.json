@@ -21,9 +21,16 @@
           "id": "agent-claude-opus-4",
           "label": "Claude Opus 4",
           "file": "agent-claude-opus-4/index.html"
+        },
+        {
           "id": "agent-gpt-5.2",
           "label": "GPT-5.2",
           "file": "agent-gpt-5.2/index.html"
+        },
+        {
+          "id": "agent-gemini-3-pro-preview",
+          "label": "Gemini 3 Pro Preview",
+          "file": "agent-gemini-3-pro-preview/index.html"
         }
       ]
     },
@@ -46,6 +53,11 @@
           "id": "claude-sonnet-45-v2",
           "label": "Claude Sonnet 4.5 (v2)",
           "file": "claude-sonnet-45-v2/index.html"
+        },
+        {
+          "id": "agent-gemini-3-pro-preview",
+          "label": "Gemini 3 Pro Preview",
+          "file": "agent-gemini-3-pro-preview/index.html"
         }
       ]
     },
@@ -68,6 +80,11 @@
           "id": "claude-sonnet-45-v2",
           "label": "Claude Sonnet 4.5 (v2)",
           "file": "claude-sonnet-45-v2/index.html"
+        },
+        {
+          "id": "agent-gemini-3-pro-preview",
+          "label": "Gemini 3 Pro Preview",
+          "file": "agent-gemini-3-pro-preview/index.html"
         }
       ]
     }
