@@ -17,12 +17,12 @@ export default defineNitroPlugin(async (nitroApp) => {
           const projectsCheck = await db.prepare('SELECT COUNT(*) as count FROM projects').first()
           const count = (projectsCheck as any)?.count || 0
           if (count === 0) {
-            const { seedProjects } = await import('../database/seed-projects')
-            await seedProjects(db)
-            console.log('Projects seeded')
+            const { seedDatabase } = await import('../database/seed')
+            await seedDatabase(db)
+            console.log('Database seeded with projects and submissions')
           }
         } catch (seedError) {
-          console.warn('Failed to seed projects:', seedError)
+          console.warn('Failed to seed database:', seedError)
         }
       }
     } catch (error) {
