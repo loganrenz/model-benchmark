@@ -44,7 +44,7 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
   <!-- Drawer -->
   <div
     class="fixed inset-x-0 bottom-0 z-50 transition-transform duration-300"
-    :class="isOpen ? 'translate-y-0' : 'translate-y-[90vh]'"
+    :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-4rem)]'"
   >
     <div class="mx-auto max-w-3xl rounded-t-2xl border border-gray-200 bg-white shadow-xl">
       <!-- Handle -->
