@@ -20,7 +20,6 @@ const breadcrumbs = [
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
-    <!-- Error State -->
     <div v-if="error" class="flex flex-1 items-center justify-center p-8">
       <div class="w-full max-w-sm text-center">
         <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-red-50 to-red-100 shadow-lg shadow-red-100/50">
@@ -33,7 +32,6 @@ const breadcrumbs = [
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-else-if="!projectsData" class="flex flex-1 items-center justify-center py-20">
       <div class="text-center">
         <div class="mx-auto mb-6 size-12 animate-spin rounded-full border-[3px] border-gray-200 border-t-indigo-600 shadow-lg"></div>
@@ -41,9 +39,7 @@ const breadcrumbs = [
       </div>
     </div>
 
-    <!-- Form -->
     <div v-else-if="projectsData">
-      <!-- Page Header -->
       <div class="mb-8 text-center">
         <div class="inline-flex items-center justify-center size-16 rounded-3xl bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg shadow-indigo-200/50 border border-indigo-100/50 mb-4">
           <UIcon name="i-heroicons-paper-airplane" class="size-8 text-indigo-600" />
@@ -56,7 +52,6 @@ const breadcrumbs = [
         </p>
       </div>
 
-      <!-- Submission Form -->
       <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/5 border border-gray-200/80 p-6 lg:p-8">
         <SubmissionForm
           :projects="projectsData.projects"
@@ -64,7 +59,6 @@ const breadcrumbs = [
         />
       </div>
 
-      <!-- Info Section -->
       <div class="mt-8 grid md:grid-cols-3 gap-4">
         <div class="rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 p-5">
           <div class="flex items-center gap-3 mb-3">

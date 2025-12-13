@@ -69,7 +69,6 @@ function clearFilters() {
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
-    <!-- Error State -->
     <div v-if="error" class="flex flex-1 items-center justify-center p-8">
       <div class="w-full max-w-sm text-center">
         <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-red-50 to-red-100 shadow-lg shadow-red-100/50">
@@ -88,7 +87,6 @@ function clearFilters() {
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-else-if="pending" class="space-y-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <div v-for="i in 8" :key="i" class="aspect-video rounded-2xl bg-white/80 border border-gray-200/80 animate-pulse">
@@ -97,9 +95,7 @@ function clearFilters() {
       </div>
     </div>
 
-    <!-- Submissions Grid -->
     <div v-else-if="project">
-      <!-- Page title and count -->
       <div class="mb-6">
         <h1 class="text-2xl lg:text-3xl font-black text-gray-900 tracking-tight">
           {{ project.label }}
@@ -109,9 +105,7 @@ function clearFilters() {
         </p>
       </div>
 
-      <!-- Filters -->
       <div v-if="project.models && project.models.length > 0" class="mb-6 flex flex-wrap items-center gap-4">
-        <!-- Search -->
         <div class="relative flex-1 min-w-[200px] max-w-md">
           <UIcon name="i-heroicons-magnifying-glass" class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
           <input
@@ -122,7 +116,6 @@ function clearFilters() {
           />
         </div>
         
-        <!-- Agent Filter -->
         <div v-if="uniqueAgents.length > 1" class="relative">
           <select
             v-model="selectedAgent"
@@ -136,7 +129,6 @@ function clearFilters() {
           <UIcon name="i-heroicons-chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
         </div>
         
-        <!-- Clear filters -->
         <button
           v-if="hasFilters"
           @click="clearFilters"
@@ -146,7 +138,6 @@ function clearFilters() {
           Clear
         </button>
         
-        <!-- Result count -->
         <div v-if="hasFilters" class="text-sm text-gray-500">
           {{ filteredCount }} of {{ submissionCount }} submissions
         </div>
@@ -161,7 +152,6 @@ function clearFilters() {
         />
       </div>
       
-      <!-- No results from filter -->
       <div v-else-if="hasFilters && project.models && project.models.length > 0" class="flex flex-1 items-center justify-center p-8">
         <div class="w-full max-w-sm text-center">
           <UIcon name="i-heroicons-magnifying-glass" class="size-12 text-gray-400 mx-auto mb-4" />

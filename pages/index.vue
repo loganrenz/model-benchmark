@@ -9,7 +9,6 @@ const { data: projectsData, error, pending } = await useFetch<{
 
 <template>
   <AppLayout>
-    <!-- Error State -->
     <div v-if="error" class="flex flex-1 items-center justify-center p-8">
       <div class="w-full max-w-sm text-center">
         <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-red-50 to-red-100 shadow-lg shadow-red-100/50">
@@ -28,7 +27,6 @@ const { data: projectsData, error, pending } = await useFetch<{
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-else-if="pending" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div v-for="i in 6" :key="i" class="rounded-3xl bg-white/80 border border-gray-200/80 p-6 lg:p-8 animate-pulse">
@@ -39,7 +37,6 @@ const { data: projectsData, error, pending } = await useFetch<{
       </div>
     </div>
 
-    <!-- Projects Grid -->
     <div v-else-if="projectsData && projectsData.projects.length > 0">
       <div class="mb-8 flex items-center justify-between">
         <div>
@@ -61,7 +58,6 @@ const { data: projectsData, error, pending } = await useFetch<{
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-else class="flex flex-1 items-center justify-center p-8">
       <div class="w-full max-w-md text-center">
         <div class="relative mx-auto mb-8">

@@ -23,7 +23,6 @@ const props = defineProps<{
     <AppHeader :breadcrumbs="breadcrumbs" :dark="dark">
       <template #actions>
         <slot name="header-actions">
-          <!-- Default navigation links -->
           <NuxtLink
             to="/instructions"
             class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all"

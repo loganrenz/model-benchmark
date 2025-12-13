@@ -268,10 +268,8 @@ function formatDate(dateString: string | undefined) {
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <template #header-actions>
-      <!-- No default submit button on admin page -->
     </template>
 
-    <!-- Tabs -->
     <div class="border-b border-gray-200 mb-6">
       <nav class="-mb-px flex space-x-8">
         <button @click="activeTab = 'submissions'" :class="[
@@ -299,11 +297,8 @@ function formatDate(dateString: string | undefined) {
       </nav>
     </div>
 
-    <!-- Submissions Tab -->
     <div v-if="activeTab === 'submissions'">
-      <!-- Filters and Actions Row -->
       <div class="mb-6 flex flex-wrap items-center gap-4">
-        <!-- Status Filter -->
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700">Status:</label>
           <select v-model="statusFilter"
@@ -315,7 +310,6 @@ function formatDate(dateString: string | undefined) {
           </select>
         </div>
 
-        <!-- Project Filter -->
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700">Project:</label>
           <select v-model="projectFilter"
@@ -329,7 +323,6 @@ function formatDate(dateString: string | undefined) {
 
         <div class="flex-1" />
 
-        <!-- Actions -->
         <UButton @click="seedSubmissions" :disabled="isSeeding" color="success" size="sm">
           {{ isSeeding ? 'Seeding...' : 'Seed Test Submissions' }}
         </UButton>
@@ -353,7 +346,6 @@ function formatDate(dateString: string | undefined) {
           :to="`/projects/${submission.projectId}/${submission.id}`"
           class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer block">
           <div class="flex items-start gap-4">
-            <!-- Thumbnail -->
             <div class="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
               <img v-if="submission.thumbnail" :src="submission.thumbnail" :alt="submission.label"
                 class="w-full h-full object-cover" />
@@ -362,7 +354,6 @@ function formatDate(dateString: string | undefined) {
               </div>
             </div>
 
-            <!-- Content -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-2">
                 <h3 class="text-lg font-semibold text-gray-900 truncate">{{ submission.label }}</h3>
@@ -382,7 +373,6 @@ function formatDate(dateString: string | undefined) {
               </div>
             </div>
 
-            <!-- Actions -->
             <div class="flex-shrink-0 flex flex-col gap-2">
               <UButton color="neutral" variant="ghost" size="sm" @click.stop="openSubmission(submission)">
                 Review
@@ -401,7 +391,6 @@ function formatDate(dateString: string | undefined) {
       </div>
     </div>
 
-    <!-- Projects Tab -->
     <div v-if="activeTab === 'projects'">
       <div class="mb-6 flex gap-3">
         <UButton @click="openCreateProject" color="primary">
@@ -444,12 +433,10 @@ function formatDate(dateString: string | undefined) {
       </div>
     </div>
 
-    <!-- Submission Review Modal -->
     <AdminSubmissionReviewModal v-if="selectedSubmission" :submission="selectedSubmission"
       v-model:reviewer-notes="reviewerNotes" :is-reviewing="isReviewing" @close="closeSubmissionModal"
       @review="handleReviewSubmission" />
 
-    <!-- Project Form Modal -->
     <AdminProjectFormModal :open="showProjectModal" :project="editingProject" v-model:form="projectForm"
       :is-saving="isSavingProject" @close="closeProjectModal" @save="saveProject" />
   </AppLayout>

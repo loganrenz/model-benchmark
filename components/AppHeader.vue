@@ -26,7 +26,6 @@ const isHome = computed(() => route.path === '/')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4 min-w-0">
-          <!-- Logo/Home link -->
           <NuxtLink 
             to="/" 
             class="flex items-center gap-3 flex-shrink-0 group"
@@ -56,7 +55,6 @@ const isHome = computed(() => route.path === '/')
             </div>
           </NuxtLink>
 
-          <!-- Breadcrumbs -->
           <nav v-if="breadcrumbs && breadcrumbs.length > 0" class="flex items-center gap-2 min-w-0">
             <UIcon 
               name="i-heroicons-chevron-right" 
@@ -95,10 +93,8 @@ const isHome = computed(() => route.path === '/')
           </nav>
         </div>
         
-        <!-- Right side actions -->
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <slot name="actions">
-            <!-- Default navigation links shown on home/project pages -->
             <NuxtLink
               to="/instructions"
               class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all"

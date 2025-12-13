@@ -31,7 +31,6 @@ function handleImageError() {
 <template>
   <NuxtLink v-if="submissionUrl" :to="submissionUrl"
     class="group relative w-full rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/80 shadow-lg shadow-black/5 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 overflow-hidden active:scale-[0.98] aspect-video block">
-    <!-- Loading State -->
     <div v-if="isLoading"
       class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 pointer-events-none">
       <div class="text-center">
@@ -41,7 +40,6 @@ function handleImageError() {
       </div>
     </div>
 
-    <!-- Error State -->
     <div v-if="hasError"
       class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 pointer-events-none">
       <div class="text-center">
@@ -50,7 +48,6 @@ function handleImageError() {
       </div>
     </div>
 
-    <!-- Thumbnail Image -->
     <img v-if="!hasError && model.thumbnail" :src="model.thumbnail" :alt="model.label"
       class="absolute inset-0 w-full h-full object-cover pointer-events-none" @load="handleImageLoad"
       @error="handleImageError" loading="lazy" />
@@ -62,7 +59,6 @@ function handleImageError() {
       </div>
     </div>
 
-    <!-- Label badge (always visible, subtle) -->
     <div
       class="absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-black/40 backdrop-blur-sm border border-white/20 pointer-events-none">
       <p class="text-xs font-semibold text-white">

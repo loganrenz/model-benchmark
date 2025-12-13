@@ -138,12 +138,10 @@ function openInNewTab() {
 
 <template>
   <div class="min-h-screen h-dvh w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col overflow-hidden">
-    <!-- Header -->
     <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-white/5 flex-shrink-0">
       <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div class="flex items-center justify-between gap-4">
           <div class="flex items-center gap-3 flex-1 min-w-0">
-            <!-- Logo/Home -->
             <NuxtLink 
               to="/" 
               class="flex items-center flex-shrink-0 group"
@@ -153,7 +151,6 @@ function openInNewTab() {
               </div>
             </NuxtLink>
 
-            <!-- Breadcrumbs -->
             <nav class="flex items-center gap-2 min-w-0">
               <UIcon name="i-heroicons-chevron-right" class="size-4 text-slate-600 flex-shrink-0" />
               
@@ -172,7 +169,6 @@ function openInNewTab() {
             </nav>
           </div>
 
-          <!-- Center Navigation -->
           <div v-if="totalCount > 1" class="hidden sm:flex items-center gap-2">
             <button
               @click="goToPrevious"
@@ -211,7 +207,6 @@ function openInNewTab() {
       </div>
     </header>
 
-    <!-- Error State -->
     <div v-if="hasError" class="flex flex-1 items-center justify-center p-8">
       <div class="w-full max-w-sm text-center">
         <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-red-500/10 border border-red-500/20">
@@ -230,7 +225,6 @@ function openInNewTab() {
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-else-if="!submissionSrc && !submissionHtmlContent" class="flex flex-1 items-center justify-center">
       <div class="text-center">
         <div class="mx-auto mb-6 size-12 animate-spin rounded-full border-[3px] border-white/10 border-t-cyan-400"></div>
@@ -238,9 +232,7 @@ function openInNewTab() {
       </div>
     </div>
 
-    <!-- Carousel Viewer -->
     <div v-else class="flex-1 overflow-hidden relative">
-      <!-- Previous Preview (Desktop) -->
       <div 
         v-if="previousSubmission && totalCount > 1"
         class="hidden lg:block absolute left-0 top-0 bottom-0 w-20 z-20 group cursor-pointer"
@@ -255,7 +247,6 @@ function openInNewTab() {
         </div>
       </div>
 
-      <!-- Next Preview (Desktop) -->
       <div 
         v-if="nextSubmission && totalCount > 1"
         class="hidden lg:block absolute right-0 top-0 bottom-0 w-20 z-20 group cursor-pointer"
@@ -270,7 +261,6 @@ function openInNewTab() {
         </div>
       </div>
 
-      <!-- Main Content -->
       <div 
         class="absolute inset-0 lg:inset-x-4 lg:inset-y-3 transition-all duration-300"
         :class="{
@@ -297,7 +287,6 @@ function openInNewTab() {
         </div>
       </div>
 
-      <!-- Mobile Navigation Dots -->
       <div v-if="totalCount > 1" class="lg:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
         <div class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 backdrop-blur-sm border border-white/10">
           <button
@@ -336,7 +325,6 @@ function openInNewTab() {
         </div>
       </div>
 
-      <!-- Keyboard hint -->
       <div class="hidden lg:block absolute bottom-4 right-6 z-10">
         <div class="flex items-center gap-2 text-[10px] text-slate-500">
           <kbd class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 font-mono">←</kbd>

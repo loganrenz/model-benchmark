@@ -150,7 +150,6 @@ function toggleExpanded(projectId: string) {
       </NuxtLink>
     </template>
 
-    <!-- Intro Section -->
     <div class="mb-12 rounded-3xl bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 p-8 shadow-2xl">
       <h2 class="text-2xl font-bold text-white mb-4">Getting Started</h2>
       <p class="text-slate-300 mb-6 leading-relaxed">
@@ -185,7 +184,6 @@ function toggleExpanded(projectId: string) {
       </div>
     </div>
 
-    <!-- API Info -->
     <div class="mb-12 rounded-3xl bg-slate-800/50 border border-slate-700/50 p-8">
       <h2 class="text-xl font-bold text-white mb-4">API Base URL</h2>
       <div class="flex items-center gap-3">
@@ -202,7 +200,6 @@ function toggleExpanded(projectId: string) {
       </div>
     </div>
 
-    <!-- Projects List with Copy Prompts -->
     <div class="mb-8">
       <h2 class="text-2xl font-bold text-white mb-6">Available Projects</h2>
       <p class="text-slate-400 mb-8">
@@ -222,7 +219,6 @@ function toggleExpanded(projectId: string) {
           :key="project.id"
           class="rounded-2xl bg-slate-800/50 border border-slate-700/50 overflow-hidden transition-all"
         >
-          <!-- Project Header -->
           <div class="p-6 flex items-center justify-between">
             <div class="flex-1 min-w-0">
               <h3 class="text-lg font-bold text-white mb-1">{{ project.label }}</h3>
@@ -258,7 +254,6 @@ function toggleExpanded(projectId: string) {
             </div>
           </div>
           
-          <!-- Expanded Prompt Preview -->
           <div 
             v-if="expandedProjects.has(project.id)"
             class="border-t border-slate-700/50 p-6 bg-slate-900/50"
@@ -274,7 +269,6 @@ function toggleExpanded(projectId: string) {
       </div>
     </div>
 
-    <!-- Full Documentation Link -->
     <div class="rounded-3xl bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-indigo-700/50 p-8 text-center">
       <h2 class="text-xl font-bold text-white mb-3">Need More Details?</h2>
       <p class="text-indigo-200 mb-6">

@@ -115,7 +115,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
 <template>
   <div class="w-full max-w-2xl mx-auto">
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      <!-- Success Message -->
       <div
         v-if="success"
         class="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 p-4 flex items-center gap-3"
@@ -126,7 +125,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
         </p>
       </div>
 
-      <!-- Error Message -->
       <div
         v-if="error"
         class="rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 p-4 flex items-center gap-3"
@@ -135,7 +133,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
         <p class="text-sm font-medium text-red-800">{{ error }}</p>
       </div>
 
-      <!-- Project Selection -->
       <div>
         <label class="block text-sm font-semibold text-gray-900 mb-2">
           Project <span class="text-red-500">*</span>
@@ -156,7 +153,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
         </select>
       </div>
 
-      <!-- Agent Name -->
       <div>
         <label class="block text-sm font-semibold text-gray-900 mb-2">
           Agent Name <span class="text-red-500">*</span>
@@ -173,7 +169,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
         </p>
       </div>
 
-      <!-- Label -->
       <div>
         <label class="block text-sm font-semibold text-gray-900 mb-2">
           Display Label <span class="text-red-500">*</span>
@@ -190,7 +185,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
         </p>
       </div>
 
-      <!-- File Path -->
       <div>
         <label class="block text-sm font-semibold text-gray-900 mb-2">
           File Path <span class="text-red-500">*</span>
@@ -215,7 +209,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
         </p>
       </div>
 
-      <!-- HTML Content -->
       <div>
         <label class="block text-sm font-semibold text-gray-900 mb-2">
           HTML Content <span class="text-red-500">*</span>
@@ -232,7 +225,6 @@ watch([() => formData.value.projectId, () => formData.value.agentName], ([projec
         </p>
       </div>
 
-      <!-- Submit Button -->
       <button
         type="submit"
         :disabled="isSubmitting"
