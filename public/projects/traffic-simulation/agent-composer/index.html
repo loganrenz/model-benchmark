@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Simulation - Composer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 60%, #90EE90 60%);
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Constants
+        const ROAD_Y = canvas.height * 0.6;
+        const ROAD_WIDTH = canvas.width * 0.7;
+        const LANE_WIDTH = ROAD_WIDTH / 3;
+        const LANE_1_X = (canvas.width - ROAD_WIDTH) / 2;
+        const LANE_2_X = LANE_1_X + LANE_WIDTH;
+        const LANE_3_X = LANE_2_X + LANE_WIDTH;
+        const TRAFFIC_LIGHT_X = canvas.width * 0.7;
+        const TRAFFIC_LIGHT_Y = ROAD_Y - 80;
+        
+        // Traffic light state
+        let lightState = 'green'; // 'red' or 'green'
+        let lightTimer = 0;
+        const LIGHT_DURATION = 4000; // 4 seconds per cycle
+        
+        // Car class
+        class Car {
+            constructor(lane, x, speed, color) {
+                this.lane = lane;
+                this.x = x;
+                this.y = ROAD_Y + (lane * LANE_WIDTH) + (LANE_WIDTH / 2) - 15;
+                this.speed = speed;
+                this.color = color;
+                this.width = 40;
+                this.height = 25;
+                this.stopped = false;
+            }
+            
+            update() {
+                // Check if car should stop at traffic light
+                const lightX = TRAFFIC_LIGHT_X;
+                const stopDistance = 100;
+                
+                if (lightState === 'red' && this.x < lightX && this.x > lightX - stopDistance) {
+                    this.stopped = true;
+                } else {
+                    this.stopped = false;
+                    this.x += this.speed;
+                }
+                
+                // Reset car position when it goes off screen
+                if (this.x > canvas.width + 50) {
+                    this.x = -100;
+                    this.stopped = false;
+                }
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                
+                // Car body
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+                
+                // Car windows
+                ctx.fillStyle = '#ADD8E6';
+                ctx.fillRect(-this.width / 2 + 5, -this.height / 2 + 3, 12, 8);
+                ctx.fillRect(this.width / 2 - 17, -this.height / 2 + 3, 12, 8);
+                
+                // Car wheels
+                ctx.fillStyle = '#333';
+                ctx.fillRect(-this.width / 2 + 5, this.height / 2 - 3, 8, 4);
+                ctx.fillRect(this.width / 2 - 13, this.height / 2 - 3, 8, 4);
+                
+                ctx.restore();
+            }
+        }
+        
+        // Create cars
+        const cars = [];
+        const carColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+        
+        // Initialize cars in different lanes
+        for (let i = 0; i < 6; i++) {
+            const lane = i % 3;
+            const x = -150 - (i * 120);
+            const speed = 2 + Math.random() * 1.5;
+            const color = carColors[i % carColors.length];
+            cars.push(new Car(lane, x, speed, color));
+        }
+        
+        // Draw road
+        function drawRoad() {
+            // Road surface
+            ctx.fillStyle = '#333';
+            ctx.fillRect(LANE_1_X, ROAD_Y, ROAD_WIDTH, LANE_WIDTH * 3);
+            
+            // Lane dividers
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([20, 15]);
+            
+            // Left divider
+            ctx.beginPath();
+            ctx.moveTo(LANE_2_X, ROAD_Y);
+            ctx.lineTo(LANE_2_X, ROAD_Y + LANE_WIDTH * 3);
+            ctx.stroke();
+            
+            // Right divider
+            ctx.beginPath();
+            ctx.moveTo(LANE_3_X, ROAD_Y);
+            ctx.lineTo(LANE_3_X, ROAD_Y + LANE_WIDTH * 3);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+        }
+        
+        // Draw traffic light
+        function drawTrafficLight() {
+            const poleHeight = 60;
+            const boxWidth = 30;
+            const boxHeight = 80;
+            const lightRadius = 10;
+            
+            // Pole
+            ctx.fillStyle = '#555';
+            ctx.fillRect(TRAFFIC_LIGHT_X - 5, TRAFFIC_LIGHT_Y, 10, poleHeight);
+            
+            // Light box
+            ctx.fillStyle = '#222';
+            ctx.fillRect(TRAFFIC_LIGHT_X - boxWidth / 2, TRAFFIC_LIGHT_Y - boxHeight, boxWidth, boxHeight);
+            
+            // Red light
+            ctx.fillStyle = lightState === 'red' ? '#FF0000' : '#440000';
+            ctx.beginPath();
+            ctx.arc(TRAFFIC_LIGHT_X, TRAFFIC_LIGHT_Y - boxHeight + 20, lightRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Green light
+            ctx.fillStyle = lightState === 'green' ? '#00FF00' : '#004400';
+            ctx.beginPath();
+            ctx.arc(TRAFFIC_LIGHT_X, TRAFFIC_LIGHT_Y - boxHeight + 50, lightRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Glow effect for active light
+            if (lightState === 'red') {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#FF0000';
+                ctx.fillStyle = '#FF0000';
+                ctx.beginPath();
+                ctx.arc(TRAFFIC_LIGHT_X, TRAFFIC_LIGHT_Y - boxHeight + 20, lightRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#00FF00';
+                ctx.fillStyle = '#00FF00';
+                ctx.beginPath();
+                ctx.arc(TRAFFIC_LIGHT_X, TRAFFIC_LIGHT_Y - boxHeight + 50, lightRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        // Draw background elements
+        function drawBackground() {
+            // Clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            for (let i = 0; i < 3; i++) {
+                const cloudX = (canvas.width / 4) * (i + 1);
+                const cloudY = canvas.height * 0.2;
+                drawCloud(cloudX, cloudY, 40);
+            }
+        }
+        
+        function drawCloud(x, y, size) {
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.6, y, size * 0.8, 0, Math.PI * 2);
+            ctx.arc(x + size * 1.2, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Animation loop
+        function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update traffic light
+            lightTimer += 16; // ~60fps
+            if (lightTimer >= LIGHT_DURATION) {
+                lightState = lightState === 'red' ? 'green' : 'red';
+                lightTimer = 0;
+            }
+            
+            // Draw background
+            drawBackground();
+            
+            // Draw road
+            drawRoad();
+            
+            // Update and draw cars
+            cars.forEach(car => {
+                car.update();
+                car.draw();
+            });
+            
+            // Draw traffic light
+            drawTrafficLight();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>
