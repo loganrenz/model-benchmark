@@ -4,7 +4,15 @@ A mobile-first web app for comparing AI agent implementations of the same projec
 
 ## What Is This?
 
-Multiple AI agents implement the same project (like a traffic simulation), and this app lets you browse and compare their different approaches side-by-side.
+This is an **AI agent benchmark/comparison tool**. Multiple AI agents (Claude, GPT-4, Gemini, etc.) each receive the same project prompt and create their own implementation. You can then browse and compare how different agents approached the same problem.
+
+**Use Case:** Test how different AI models implement visual projects like simulations, animations, games, data visualizations, etc.
+
+**How It Works:**
+1. Each project has a `PROMPT.md` specification (≤100 words)
+2. Different AI agents read the prompt and create their own implementation
+3. All implementations are displayed in this app for easy side-by-side comparison
+4. Each implementation is self-contained and runs in an iframe
 
 ## Quick Start
 

@@ -2,7 +2,19 @@
 
 ## What This App Does
 
-This is a **project comparison tool** where multiple AI agents implement the same project specification. Each agent creates their own implementation, and users can browse and compare different approaches side-by-side.
+This is a **project comparison tool** where multiple AI agents implement the same project specification. Each agent creates their own implementation, and users can browse and compare different approaches side-by-side in an iframe viewer.
+
+## Quick Start for Agents
+
+When you receive a task to implement a project:
+
+1. **Read** `public/projects/<project-name>/PROMPT.md` - This is your specification
+2. **Create** `public/projects/<project-name>/<your-agent-name>/` - Your implementation folder
+3. **Write** `public/projects/<project-name>/<your-agent-name>/index.html` - Your entry point (required)
+4. **Update** `public/data/manifest.json` - Register your implementation
+5. **Test** locally with `npm run dev` and verify it displays correctly
+
+That's it! Keep reading for detailed guidelines.
 
 ---
 
@@ -36,9 +48,13 @@ public/projects/
 
 Use descriptive names for implementations:
 - `reference` - The original/canonical implementation
-- `agent-<name>` - Agent implementations (e.g., `agent-claude`, `agent-gpt4`)
+- `agent-<name>` - AI agent implementations (e.g., `agent-claude`, `agent-gpt4`, `agent-gemini`)
 - `<username>` - Human implementations
 - `v1`, `v2`, etc. - Versioned implementations
+
+**For AI Agents:** Use `agent-<your-model-name>` format:
+- Example: `agent-claude-sonnet`, `agent-gpt4o`, `agent-gemini-pro`
+- This makes it easy to identify and compare agent implementations
 
 ---
 
@@ -56,6 +72,17 @@ Use descriptive names for implementations:
 - **DO NOT** modify shared resources that other implementations depend on
 
 ---
+
+## Files to Read (Before You Start)
+
+To understand the project structure and existing implementations:
+
+1. **`AGENT_GUIDE.md`** (this file) - Complete guidelines
+2. **`README.md`** - Project overview and quick reference
+3. **`public/data/manifest.json`** - See how projects/implementations are registered
+4. **`public/projects/<project>/PROMPT.md`** - Your specification (≤100 words)
+5. **Existing implementations** (optional) - See reference implementations for ideas
+   - e.g., `public/projects/<project>/reference/index.html`
 
 ## Adding Your Implementation
 
@@ -143,13 +170,30 @@ Each project has a `PROMPT.md` file (max 100 words) describing what to build. Th
 - Make it responsive if possible
 - No need for external UI controls unless specified
 
-### 4. Test Locally
+### 4. Test Your Implementation
 
-Before committing, test that:
+Before finishing, verify your implementation works:
+
+**Local Development Test:**
 ```bash
 npm run dev
 ```
-Then navigate to your model in the app to verify it displays correctly.
+- Open http://localhost:3000
+- Open the bottom drawer (tap/click the handle)
+- Select your implementation from the list
+- Verify it displays correctly in the iframe
+
+**Production Build Test:**
+```bash
+npm run build
+npm run preview
+```
+- Verify your implementation still works in production mode
+- Check that all assets load correctly
+
+**Direct File Test:**
+- Open your `index.html` directly in a browser
+- Ensure it works standalone (all dependencies load)
 
 ---
 
@@ -175,13 +219,45 @@ When creating a new project, write a `PROMPT.md` that:
 
 Before submitting your implementation:
 
-- [ ] Created a new directory under the project
+- [ ] Read the project `PROMPT.md` specification
+- [ ] Created a new directory under the project (e.g., `agent-yourname/`)
 - [ ] Included `index.html` as main entry point
 - [ ] All assets are in my directory or loaded via CDN
-- [ ] Updated `public/data/manifest.json`
-- [ ] Tested locally in the app
+- [ ] Updated `public/data/manifest.json` with correct paths
+- [ ] Tested with `npm run dev` - implementation displays in app
+- [ ] Tested with `npm run build && npm run preview` - works in production mode
+- [ ] Tested `index.html` directly in browser - works standalone
 - [ ] Did NOT modify other implementations
 - [ ] Did NOT edit the project PROMPT.md
+- [ ] Did NOT modify the Nuxt app code (unless fixing bugs)
+
+---
+
+## Troubleshooting
+
+### My implementation doesn't show up in the app
+- Check `manifest.json` syntax is valid JSON
+- Verify the `file` path is correct: `<your-folder>/index.html`
+- Ensure `id` is unique and matches your folder name
+- Restart the dev server after manifest changes
+
+### My implementation shows a blank page
+- Check browser console for errors
+- Verify all assets use correct paths (relative or CDN)
+- Test the `index.html` file directly in a browser
+- Ensure no dependencies on files outside your directory
+
+### CSS/Styles not loading in production
+- The app uses Tailwind CSS via `@nuxt/ui`
+- Your implementation is in an iframe - it needs its own styles
+- Include all CSS inline or in your own files
+- Don't depend on the parent app's styles
+
+### Images/Assets not loading
+- Use relative paths: `./assets/image.png` 
+- Or use absolute paths from your directory: `/projects/<project>/<impl>/assets/image.png`
+- Or use CDN URLs: `https://...`
+- Verify files are actually in your directory
 
 ---
 

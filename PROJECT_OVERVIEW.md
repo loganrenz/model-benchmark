@@ -1,23 +1,25 @@
 # Project Overview - Mobile-First Project Viewer
 
 ## Purpose
-A mobile-first Nuxt 4 application that displays project model outputs in an iframe viewer with a bottom drawer navigation.
+A mobile-first Nuxt 4 application for comparing AI agent implementations. Displays different agent implementations of the same project in an iframe viewer with a bottom drawer navigation for easy comparison.
+
+**Key Concept:** Multiple AI agents implement the same prompt, and this app lets users browse and compare the different approaches.
 
 ## Core Functionality
 
 ### 1. Main View (pages/index.vue)
-- Displays an iframe showing the currently selected model output
+- Displays an iframe showing the currently selected implementation
 - Shows loading state while manifest loads
 - Shows error state if manifest fails to load
-- Handles query parameter `?model=` to restore selected model
-- Full-screen iframe view when a model is active
+- Handles query parameter `?model=` to restore selected implementation
+- Full-screen iframe view when an implementation is active
 
 ### 2. Project Explorer (Bottom Drawer)
 - Mobile-first bottom sheet that slides up from the bottom
 - Collapsed by default (showing small handle)
 - Expands to 75% viewport height when opened
-- Contains a tree view of all projects and their models
-- Highlights currently active model
+- Contains a tree view of all projects and their agent implementations
+- Highlights currently active implementation
 - Body scroll lock when drawer is open
 
 ### 3. Data Structure
@@ -30,14 +32,19 @@ Structure:
   "root": "projects",
   "projects": [
     {
-      "id": "project-id",
-      "label": "Project Name",
-      "folder": "folder-name",
+      "id": "traffic-simulation",
+      "label": "Traffic Simulation",
+      "folder": "traffic-simulation",
       "models": [
         {
-          "id": "model-id",
-          "label": "model-file.html",
-          "file": "model-file.html"
+          "id": "reference",
+          "label": "Reference Implementation",
+          "file": "reference/index.html"
+        },
+        {
+          "id": "agent-claude",
+          "label": "Claude Sonnet",
+          "file": "agent-claude/index.html"
         }
       ]
     }
@@ -45,9 +52,12 @@ Structure:
 }
 ```
 
-**Model Files**: Stored in `public/projects/<folder>/<file>`
+**Implementation Files**: Stored in `public/projects/<folder>/<implementation>/`
+- Each implementation is in its own subdirectory
+- Must have an `index.html` as the entry point
 - Self-contained HTML files that can be iframed
-- Accessed via URL: `/projects/<folder>/<file>`
+- Accessed via URL: `/projects/<folder>/<implementation>/index.html`
+- Note: "models" in the manifest refers to agent implementations (naming kept for backwards compatibility)
 
 ## Technical Architecture
 
