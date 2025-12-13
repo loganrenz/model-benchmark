@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Patterns - Gemini 3 Pro Preview</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let time = 0;
+        
+        // Configuration
+        const GRID_SIZE = 15; // Pixel gap between points
+        const FREQ = 0.05;
+        const SPEED = 0.1;
+        
+        const sources = [
+            {x: 0, y: 0, dx: 2, dy: 1.5},
+            {x: 0, y: 0, dx: -1.5, dy: 2},
+            {x: 0, y: 0, dx: 1, dy: -2},
+            {x: 0, y: 0, dx: -2, dy: -1},
+        ];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Random start positions
+            sources.forEach(s => {
+                s.x = Math.random() * width;
+                s.y = Math.random() * height;
+            });
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Clear fully
+            ctx.fillRect(0, 0, width, height);
+            
+            time += SPEED;
+
+            // Move sources
+            sources.forEach(s => {
+                s.x += s.dx;
+                s.y += s.dy;
+                
+                // Bounce sources off walls
+                if (s.x < 0 || s.x > width) s.dx *= -1;
+                if (s.y < 0 || s.y > height) s.dy *= -1;
+            });
+
+            // Draw grid
+            for (let y = 0; y < height; y += GRID_SIZE) {
+                for (let x = 0; x < width; x += GRID_SIZE) {
+                    let amplitude = 0;
+                    
+                    // Sum waves
+                    for (const s of sources) {
+                        const dist = Math.sqrt((x - s.x)**2 + (y - s.y)**2);
+                        amplitude += Math.sin(dist * FREQ - time);
+                    }
+                    
+                    // Normalize amplitude roughly between -4 and 4 (for 4 sources)
+                    // Map to 0-1 for color
+                    // amplitude can be -4 to 4. 
+                    const val = (amplitude / sources.length + 1) / 2; // ~ 0 to 1
+                    
+                    // Color mapping: Blue (low) -> Cyan -> White (high)
+                    // Hue: 240 (blue) -> 180 (cyan)
+                    // Lightness: 30% -> 90%
+                    
+                    const hue = 240 - val * 60; 
+                    const light = 20 + val * 70;
+                    
+                    ctx.fillStyle = `hsl(${hue}, 80%, ${light}%)`;
+                    
+                    // Optional: Size variation
+                    const size = GRID_SIZE * 0.8 * val;
+                    
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

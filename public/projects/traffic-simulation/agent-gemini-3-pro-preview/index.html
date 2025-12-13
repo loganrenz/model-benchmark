@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Simulation - Gemini 3 Pro Preview</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f0f2f5;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const CYCLE_TIME = 4000; // 4 seconds per light state
+        const CAR_SPEED = 3;
+        const CAR_WIDTH = 60;
+        const CAR_HEIGHT = 30;
+        const SPAWN_RATE = 1500; // New car every 1.5s (approx)
+        
+        // State
+        let width, height;
+        let lastTime = 0;
+        let lightState = 'GREEN'; // 'GREEN' or 'RED'
+        let lightTimer = 0;
+        let lastSpawnTime = 0;
+        
+        class Car {
+            constructor() {
+                this.width = CAR_WIDTH;
+                this.height = CAR_HEIGHT;
+                this.x = -this.width;
+                this.y = height / 2 + 10; // Bottom lane
+                this.speed = CAR_SPEED;
+                this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                this.stopped = false;
+            }
+
+            update(cars, lightState) {
+                // Check if should stop for red light
+                const lightX = width * 0.7;
+                const distToLight = lightX - (this.x + this.width);
+                
+                // Find car ahead
+                let carAhead = null;
+                let minDist = Infinity;
+                
+                for (const other of cars) {
+                    if (other !== this && other.x > this.x) {
+                        const dist = other.x - (this.x + this.width);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            carAhead = other;
+                        }
+                    }
+                }
+
+                // Logic to stop
+                let shouldStop = false;
+
+                // Stop for light
+                if (lightState === 'RED' && distToLight > 0 && distToLight < 100) {
+                    shouldStop = true;
+                }
+
+                // Stop for car ahead
+                if (carAhead && minDist < 30) {
+                    shouldStop = true;
+                }
+
+                if (shouldStop) {
+                    this.speed = Math.max(0, this.speed - 0.2);
+                } else {
+                    this.speed = Math.min(CAR_SPEED, this.speed + 0.1);
+                }
+
+                this.x += this.speed;
+            }
+
+            draw() {
+                // Car body
+                ctx.fillStyle = this.color;
+                
+                // Modern rounded car shape
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 6);
+                ctx.fill();
+                
+                // Windows
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.x + 10, this.y + 4, 15, this.height - 8);
+                ctx.fillRect(this.x + 35, this.y + 4, 15, this.height - 8);
+
+                // Wheels
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(this.x + 12, this.y + this.height, 6, 0, Math.PI * 2);
+                ctx.arc(this.x + this.width - 12, this.y + this.height, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        let cars = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function drawRoad() {
+            const laneY = height / 2;
+            
+            // Grass
+            ctx.fillStyle = '#8bc34a';
+            ctx.fillRect(0, 0, width, height);
+
+            // Road
+            ctx.fillStyle = '#555';
+            ctx.fillRect(0, laneY - 60, width, 120);
+
+            // Lane markings
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([20, 20]);
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, laneY);
+            ctx.lineTo(width, laneY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Road edges
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, laneY - 58);
+            ctx.lineTo(width, laneY - 58);
+            ctx.moveTo(0, laneY + 58);
+            ctx.lineTo(width, laneY + 58);
+            ctx.stroke();
+        }
+
+        function drawTrafficLight() {
+            const lightX = width * 0.7;
+            const lightY = height / 2 - 120;
+            
+            // Pole
+            ctx.fillStyle = '#444';
+            ctx.fillRect(lightX - 5, lightY, 10, 120);
+            
+            // Box
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.roundRect(lightX - 20, lightY - 60, 40, 80, 5);
+            ctx.fill();
+
+            // Lights
+            // Red
+            ctx.fillStyle = lightState === 'RED' ? '#ff4444' : '#500';
+            ctx.shadowBlur = lightState === 'RED' ? 20 : 0;
+            ctx.shadowColor = '#ff4444';
+            ctx.beginPath();
+            ctx.arc(lightX, lightY - 40, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Green
+            ctx.fillStyle = lightState === 'GREEN' ? '#44ff44' : '#050';
+            ctx.shadowBlur = lightState === 'GREEN' ? 20 : 0;
+            ctx.shadowColor = '#44ff44';
+            ctx.beginPath();
+            ctx.arc(lightX, lightY - 10, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Stop line on road
+            ctx.fillStyle = '#fff';
+            ctx.globalAlpha = 0.5;
+            ctx.fillRect(lightX, height/2 - 58, 10, 116);
+            ctx.globalAlpha = 1.0;
+        }
+
+        function loop(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            // Update Light
+            lightTimer += deltaTime;
+            if (lightTimer > CYCLE_TIME) {
+                lightTimer = 0;
+                lightState = lightState === 'GREEN' ? 'RED' : 'GREEN';
+            }
+
+            // Spawn Cars
+            if (timestamp - lastSpawnTime > SPAWN_RATE) {
+                // Only spawn if there's room
+                let canSpawn = true;
+                for (const car of cars) {
+                    if (car.x < 100) {
+                        canSpawn = false;
+                        break;
+                    }
+                }
+                if (canSpawn) {
+                    cars.push(new Car());
+                    lastSpawnTime = timestamp;
+                }
+            }
+
+            // Draw
+            ctx.clearRect(0, 0, width, height);
+            
+            drawRoad();
+            drawTrafficLight();
+
+            // Update and Draw Cars
+            for (let i = cars.length - 1; i >= 0; i--) {
+                const car = cars[i];
+                car.update(cars, lightState);
+                car.draw();
+
+                if (car.x > width) {
+                    cars.splice(i, 1);
+                }
+            }
+            
+            // Info text
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(10, 10, 160, 30);
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px sans-serif';
+            ctx.fillText(`Light: ${lightState} (${Math.ceil((CYCLE_TIME - lightTimer)/1000)}s)`, 20, 30);
+
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
+
+    </script>
+</body>
+</html>
