@@ -11,3 +11,4 @@ Create an animated fractal tree that grows and branches recursively. Include:
 - Self-contained HTML file that can be displayed in an iframe
 
 Use any technology you prefer (Canvas, SVG, etc.). Focus on creating smooth, organic animations that demonstrate recursive algorithms and natural tree growth patterns.
+

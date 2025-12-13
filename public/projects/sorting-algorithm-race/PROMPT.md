@@ -16,3 +16,4 @@ Create a side-by-side comparison visualization of multiple sorting algorithms ru
 - Self-contained HTML file that can be displayed in an iframe
 
 Use any technology you prefer (Canvas, SVG, etc.). Focus on clearly showing how different algorithms approach the same problem and demonstrating their relative performance through visual comparison.
+

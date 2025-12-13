@@ -16,3 +16,4 @@ Create a pathfinding algorithm visualization that shows how an algorithm finds t
 
 Use any technology you prefer (Canvas, SVG, etc.). Focus on clearly showing how the algorithm explores the space before finding the optimal path.
 
+
