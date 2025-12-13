@@ -25,13 +25,20 @@ const localForm = computed({
   set: (value) => emit('update:form', value)
 })
 
+const isOpen = computed({
+  get: () => props.open,
+  set: (value) => {
+    if (!value) emit('close')
+  }
+})
+
 const canSave = computed(() => {
   return !props.isSaving && localForm.value.id && localForm.value.label && localForm.value.folder
 })
 </script>
 
 <template>
-  <UModal :open="open" @update:open="(val) => !val && emit('close')">
+  <UModal v-model:open="isOpen">
     <template #content>
       <UCard>
         <template #header>

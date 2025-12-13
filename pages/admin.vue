@@ -83,6 +83,13 @@ async function handleReviewSubmission(status: 'approved' | 'rejected', thumbnail
   }
 }
 
+async function quickApproveSubmission(submission: Submission) {
+  if (!submission) return
+  selectedSubmission.value = submission
+  reviewerNotes.value = submission.reviewerNotes || ''
+  await handleReviewSubmission('approved')
+}
+
 function openSubmission(submission: Submission) {
   selectedSubmission.value = submission
   reviewerNotes.value = submission.reviewerNotes || ''
@@ -236,7 +243,7 @@ async function seedSubmissions() {
 async function generateThumbnailForSubmission(submissionId: string, event: Event) {
   event.preventDefault()
   event.stopPropagation()
-  
+
   generatingThumbnailFor.value = submissionId
   try {
     await $fetch(`/api/admin/submissions/${submissionId}/thumbnail`, {
@@ -299,81 +306,62 @@ function formatDate(dateString: string | undefined) {
         <!-- Status Filter -->
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700">Status:</label>
-          <select
-            v-model="statusFilter"
-            class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-          >
+          <select v-model="statusFilter"
+            class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
         </div>
-        
+
         <!-- Project Filter -->
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700">Project:</label>
-          <select
-            v-model="projectFilter"
-            class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-          >
+          <select v-model="projectFilter"
+            class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
             <option value="">All Projects</option>
             <option v-if="projectsData" v-for="project in projectsData.projects" :key="project.id" :value="project.id">
               {{ project.label }}
             </option>
           </select>
         </div>
-        
+
         <div class="flex-1" />
-        
+
         <!-- Actions -->
-        <UButton
-          @click="seedSubmissions"
-          :disabled="isSeeding"
-          color="success"
-          size="sm"
-        >
+        <UButton @click="seedSubmissions" :disabled="isSeeding" color="success" size="sm">
           {{ isSeeding ? 'Seeding...' : 'Seed Test Submissions' }}
         </UButton>
-        <UButton
-          @click="backfillThumbnails"
-          :disabled="isBackfilling"
-          color="primary"
-          size="sm"
-        >
+        <UButton @click="backfillThumbnails" :disabled="isBackfilling" color="primary" size="sm">
           {{ isBackfilling ? 'Backfilling...' : 'Backfill Thumbnails' }}
         </UButton>
       </div>
-      
+
       <div v-if="!submissionsData" class="text-center py-12">
         <div class="text-gray-500">Loading submissions...</div>
       </div>
 
       <div v-else-if="submissionsData.submissions.length === 0" class="text-center py-12">
-        <div class="text-gray-500 text-lg">No {{ statusFilter === 'all' ? '' : statusFilter }} submissions{{ projectFilter ? ' for this project' : '' }}</div>
+        <div class="text-gray-500 text-lg">No {{ statusFilter === 'all' ? '' : statusFilter }} submissions{{
+          projectFilter ?
+          ' for this project' : '' }}</div>
       </div>
 
       <div v-else class="grid gap-4">
-        <NuxtLink
-          v-for="submission in submissionsData.submissions"
-          :key="submission.id"
+        <NuxtLink v-for="submission in submissionsData.submissions" :key="submission.id"
           :to="`/projects/${submission.projectId}/${submission.id}`"
-          class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer block"
-        >
+          class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer block">
           <div class="flex items-start gap-4">
             <!-- Thumbnail -->
             <div class="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-              <img 
-                v-if="submission.thumbnail" 
-                :src="submission.thumbnail" 
-                :alt="submission.label"
-                class="w-full h-full object-cover"
-              />
+              <img v-if="submission.thumbnail" :src="submission.thumbnail" :alt="submission.label"
+                class="w-full h-full object-cover" />
               <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                 <UIcon name="i-heroicons-photo" class="size-8" />
               </div>
             </div>
-            
+
             <!-- Content -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-2">
@@ -381,8 +369,8 @@ function formatDate(dateString: string | undefined) {
                 <span :class="[
                   'px-2 py-1 text-xs font-medium rounded-full flex-shrink-0',
                   submission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  submission.status === 'approved' ? 'bg-green-100 text-green-800' :
-                  'bg-red-100 text-red-800'
+                    submission.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      'bg-red-100 text-red-800'
                 ]">
                   {{ submission.status }}
                 </span>
@@ -393,25 +381,18 @@ function formatDate(dateString: string | undefined) {
                 <div><span class="font-medium">Submitted:</span> {{ formatDate(submission.submittedAt) }}</div>
               </div>
             </div>
-            
+
             <!-- Actions -->
             <div class="flex-shrink-0 flex flex-col gap-2">
-              <UButton
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                @click.stop="openSubmission(submission)"
-              >
+              <UButton color="neutral" variant="ghost" size="sm" @click.stop="openSubmission(submission)">
                 Review
               </UButton>
-              <UButton
-                color="primary"
-                variant="outline"
-                size="sm"
-                :loading="generatingThumbnailFor === submission.id"
+              <UButton color="green" variant="ghost" size="sm" @click.stop="quickApproveSubmission(submission)">
+                Approve
+              </UButton>
+              <UButton color="primary" variant="outline" size="sm" :loading="generatingThumbnailFor === submission.id"
                 :disabled="generatingThumbnailFor !== null"
-                @click="generateThumbnailForSubmission(submission.id!, $event)"
-              >
+                @click="generateThumbnailForSubmission(submission.id!, $event)">
                 {{ submission.thumbnail ? 'Regen' : 'Gen' }} Thumb
               </UButton>
             </div>
@@ -423,17 +404,10 @@ function formatDate(dateString: string | undefined) {
     <!-- Projects Tab -->
     <div v-if="activeTab === 'projects'">
       <div class="mb-6 flex gap-3">
-        <UButton
-          @click="openCreateProject"
-          color="primary"
-        >
+        <UButton @click="openCreateProject" color="primary">
           + Create Project
         </UButton>
-        <UButton
-          @click="initializeDefaultProjects"
-          :disabled="isInitializing"
-          color="neutral"
-        >
+        <UButton @click="initializeDefaultProjects" :disabled="isInitializing" color="neutral">
           Initialize Defaults
         </UButton>
       </div>
@@ -458,20 +432,10 @@ function formatDate(dateString: string | undefined) {
               </div>
             </div>
             <div class="flex gap-2">
-              <UButton
-                @click="openEditProject(project)"
-                color="primary"
-                variant="ghost"
-                size="sm"
-              >
+              <UButton @click="openEditProject(project)" color="primary" variant="ghost" size="sm">
                 Edit
               </UButton>
-              <UButton
-                @click="deleteProject(project)"
-                color="error"
-                variant="ghost"
-                size="sm"
-              >
+              <UButton @click="deleteProject(project)" color="error" variant="ghost" size="sm">
                 Delete
               </UButton>
             </div>
@@ -481,23 +445,12 @@ function formatDate(dateString: string | undefined) {
     </div>
 
     <!-- Submission Review Modal -->
-    <AdminSubmissionReviewModal
-      v-if="selectedSubmission"
-      :submission="selectedSubmission"
-      v-model:reviewer-notes="reviewerNotes"
-      :is-reviewing="isReviewing"
-      @close="closeSubmissionModal"
-      @review="handleReviewSubmission"
-    />
+    <AdminSubmissionReviewModal v-if="selectedSubmission" :submission="selectedSubmission"
+      v-model:reviewer-notes="reviewerNotes" :is-reviewing="isReviewing" @close="closeSubmissionModal"
+      @review="handleReviewSubmission" />
 
     <!-- Project Form Modal -->
-    <AdminProjectFormModal
-      :open="showProjectModal"
-      :project="editingProject"
-      v-model:form="projectForm"
-      :is-saving="isSavingProject"
-      @close="closeProjectModal"
-      @save="saveProject"
-    />
+    <AdminProjectFormModal :open="showProjectModal" :project="editingProject" v-model:form="projectForm"
+      :is-saving="isSavingProject" @close="closeProjectModal" @save="saveProject" />
   </AppLayout>
 </template>

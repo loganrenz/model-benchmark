@@ -21,6 +21,13 @@ const localNotes = computed({
   set: (value) => emit('update:reviewerNotes', value)
 })
 
+const isOpen = computed({
+  get: () => !!props.submission,
+  set: (value) => {
+    if (!value) emit('close')
+  }
+})
+
 const iframeRef = ref<HTMLIFrameElement | null>(null)
 const isGeneratingThumbnail = ref(false)
 const thumbnailDataUrl = ref<string | null>(null)
@@ -75,7 +82,7 @@ async function handleReview(status: 'approved' | 'rejected') {
 </script>
 
 <template>
-  <UModal :open="!!submission" @update:open="(val) => !val && emit('close')">
+  <UModal v-model:open="isOpen">
     <template #content>
       <UCard>
         <template #header>
