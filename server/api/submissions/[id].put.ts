@@ -6,7 +6,7 @@ import { badRequest, internalError } from '~/server/utils/errors'
 import { validateStatus } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const id = getRouterParam(event, 'id')
   const body = await readBody<SubmissionUpdate>(event)
 

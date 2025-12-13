@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     throw forbidden('Seed endpoint only available in development')
   }
 
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
 
   try {
     const result = await seedDatabase(db)

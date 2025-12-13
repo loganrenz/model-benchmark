@@ -5,7 +5,7 @@ import { PromptsRepository } from '~/server/repositories/prompts'
 import { badRequest, internalError } from '~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const projectId = getRouterParam(event, 'id')
 
   if (!projectId) {

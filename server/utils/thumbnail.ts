@@ -1,14 +1,57 @@
+interface ThumbnailOptions {
+  htmlContent: string
+  label?: string
+  projectId?: string
+  apiKey?: string
+}
+
 /**
- * Generate a thumbnail from HTML content
- * Currently uses enhanced SVG placeholders (lightweight, works everywhere)
- * 
- * Future: Could integrate with external screenshot service or Playwright for production-quality thumbnails
+ * Generate a thumbnail from HTML content using Screenshotone API
+ * Falls back to placeholder if API key not configured or request fails
  */
-export async function generateThumbnail(htmlContent: string, label?: string, projectId?: string): Promise<string | null> {
-  // For now, always use enhanced placeholder
-  // This is lightweight and works in both dev and production
-  // TODO: Consider integrating external screenshot service (Urlbox, ScreenshotAPI) for production-quality thumbnails
-  return generatePlaceholderThumbnail(label || 'Submission', projectId)
+export async function generateThumbnail(options: ThumbnailOptions): Promise<string | null> {
+  const { htmlContent, label, projectId, apiKey } = options
+  
+  if (!apiKey || !htmlContent) {
+    return generatePlaceholderThumbnail(label || 'Submission', projectId)
+  }
+
+  try {
+    const screenshot = await captureScreenshotFromHtml(htmlContent, apiKey)
+    return screenshot
+  } catch (error) {
+    console.error('Screenshot generation failed, using placeholder:', error)
+    return generatePlaceholderThumbnail(label || 'Submission', projectId)
+  }
+}
+
+/**
+ * Capture a screenshot from HTML content using Screenshotone API
+ */
+async function captureScreenshotFromHtml(htmlContent: string, apiKey: string): Promise<string> {
+  // Screenshotone supports rendering HTML directly via the html parameter
+  const params = new URLSearchParams({
+    access_key: apiKey,
+    html: htmlContent,
+    viewport_width: '800',
+    viewport_height: '600',
+    format: 'jpeg',
+    image_quality: '80',
+    delay: '1', // Wait 1 second for animations to start
+    block_ads: 'true',
+    block_cookie_banners: 'true',
+    response_type: 'base64'
+  })
+
+  const response = await fetch(`https://api.screenshotone.com/take?${params.toString()}`)
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Screenshotone API error: ${response.status} - ${errorText}`)
+  }
+
+  const base64 = await response.text()
+  return `data:image/jpeg;base64,${base64}`
 }
 
 /**

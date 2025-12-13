@@ -58,16 +58,16 @@ Users can submit implementations at `/submit`:
 
 ## Database
 
-The app uses:
-- **Development**: Local SQLite database (`.data/local.db`)
-- **Production**: Cloudflare D1
+The app uses SQLite with different implementations per environment:
+- **Development**: Local SQLite via `better-sqlite3` (`.data/local.db`)
+- **Production**: Cloudflare D1 (serverless SQLite)
 
 ### Tables
 - `projects`: Project definitions
 - `submissions`: User-submitted implementations
 - `prompts`: Project prompts for different difficulty levels
 
-The database is automatically initialized on first run.
+The database schema is automatically initialized on first run.
 
 ## Project Structure
 
@@ -99,7 +99,15 @@ composables/
 ## Build & Deploy
 
 ```bash
-npm run build  # Builds for production
+npm run build         # Build for production
+npm run deploy:pages  # Build and deploy to Cloudflare Pages
 ```
 
-Deploys to Cloudflare Pages with D1 database.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+### Tech Stack
+- **Framework**: Nuxt 4 (Vue 3)
+- **Hosting**: Cloudflare Pages
+- **Runtime**: Cloudflare Workers
+- **Database**: Cloudflare D1 (production) / better-sqlite3 (development)
+- **UI**: Nuxt UI (Tailwind CSS)

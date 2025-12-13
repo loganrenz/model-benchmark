@@ -9,6 +9,11 @@ export default defineNuxtConfig({
   
   css: ['~/assets/css/tailwind.css'],
   
+  runtimeConfig: {
+    // Server-side only
+    screenshotoneApiKey: process.env.SCREENSHOTONE_API_KEY || ''
+  },
+  
   nitro: {
     preset: 'cloudflare-pages',
     experimental: {

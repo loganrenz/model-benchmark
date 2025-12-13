@@ -7,7 +7,7 @@ import { internalError } from '~/server/utils/errors'
  * This is a convenience endpoint for first-time setup
  */
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
 
   const defaultProjects = [
     {

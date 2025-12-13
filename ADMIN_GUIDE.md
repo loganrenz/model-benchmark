@@ -144,8 +144,10 @@ The admin dashboard uses these API endpoints:
 ## Troubleshooting
 
 ### "Database not available"
-- In development: Check that `.data/local.db` exists
-- In production: Verify D1 database is configured
+- In development: Check that `.data/local.db` exists (auto-created on first run)
+- In production: Verify D1 binding is configured in Cloudflare Pages settings
+  - Go to Pages → Your Project → Settings → Functions → D1 database bindings
+  - Ensure binding name is `DB` and points to `model-benchmark-db`
 
 ### "Project with this ID already exists"
 - Choose a different ID or edit the existing project
@@ -161,13 +163,18 @@ The admin dashboard uses these API endpoints:
 
 ## Development vs Production
 
-### Development
-- Uses local SQLite database at `.data/local.db`
-- Database auto-initializes on first run
-- No manual migration needed
+### Development (Local)
+- Uses local SQLite database via `better-sqlite3`
+- Database file: `.data/local.db`
+- Auto-initializes on first run
+- No Cloudflare account needed
+- Runs on `http://localhost:2029`
 
-### Production
-- Uses Cloudflare D1 database
-- Requires D1 binding in `wrangler.toml`
-- Migrations run automatically on deployment
+### Production (Cloudflare)
+- Uses Cloudflare D1 (serverless SQLite)
+- Hosted on Cloudflare Pages
+- API runs on Cloudflare Workers
+- D1 binding configured in `wrangler.toml`
+- Database auto-initializes on first access
+- See [DEPLOYMENT.md](./DEPLOYMENT.md) for setup instructions
 

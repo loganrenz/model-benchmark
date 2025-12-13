@@ -3,7 +3,7 @@ import { SubmissionsRepository } from '~/server/repositories/submissions'
 import { internalError } from '~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const query = getQuery(event)
   
   const projectId = query.projectId as string | undefined

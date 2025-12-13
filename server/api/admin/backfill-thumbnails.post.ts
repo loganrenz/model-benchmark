@@ -4,7 +4,8 @@ import { generateThumbnail, generatePlaceholderThumbnail } from '~/server/utils/
 import { internalError } from '~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
+  const config = useRuntimeConfig(event)
   const query = getQuery(event)
   const regenerate = query.regenerate === 'true'
 
@@ -54,11 +55,12 @@ export default defineEventHandler(async (event) => {
     for (const submission of submissions) {
       try {
         // Generate thumbnail from HTML content stored in database
-        const thumbnail = await generateThumbnail(
-          submission.html_content || '', 
-          submission.label, 
-          submission.project_id
-        ) || generatePlaceholderThumbnail(submission.label, submission.project_id)
+        const thumbnail = await generateThumbnail({
+          htmlContent: submission.html_content || '',
+          label: submission.label,
+          projectId: submission.project_id,
+          apiKey: config.screenshotoneApiKey
+        }) || generatePlaceholderThumbnail(submission.label, submission.project_id)
 
         // Update the submission with the thumbnail
         await submissionsRepo.updateThumbnail(submission.id, thumbnail)

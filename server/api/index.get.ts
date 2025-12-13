@@ -2,7 +2,7 @@
  * Root API endpoint - Provides instructions and API contract for agents
  * 
  * This is the entry point for agents to understand how to interact with the API.
- * Call: curl https://model-benchmark.vercel.app/api
+ * Call: curl https://model-benchmark.pages.dev/api
  */
 export default defineEventHandler(async (event) => {
   const baseUrl = getRequestURL(event).origin

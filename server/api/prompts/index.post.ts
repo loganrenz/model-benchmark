@@ -13,7 +13,7 @@ interface PromptCreate {
 }
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const body = await readBody<PromptCreate>(event)
 
   // Validate required fields

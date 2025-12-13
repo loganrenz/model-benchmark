@@ -7,17 +7,23 @@ import { badRequest, internalError } from '~/server/utils/errors'
 import { mapDbSubmissionToSubmission } from '~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const body = await readBody<SubmissionCreate>(event)
+  const config = useRuntimeConfig(event)
 
   // Validate required fields
   validateRequired(body, ['projectId', 'agentName', 'label', 'filePath', 'htmlContent'])
   validateFilePath(body.filePath)
 
-  // Generate thumbnail (always generates enhanced placeholder)
+  // Generate thumbnail using Screenshotone API if configured
   let thumbnail: string | null
   try {
-    thumbnail = await generateThumbnail(body.htmlContent, body.label, body.projectId) || generatePlaceholderThumbnail(body.label, body.projectId)
+    thumbnail = await generateThumbnail({
+      htmlContent: body.htmlContent,
+      label: body.label,
+      projectId: body.projectId,
+      apiKey: config.screenshotoneApiKey
+    }) || generatePlaceholderThumbnail(body.label, body.projectId)
   } catch (error) {
     thumbnail = generatePlaceholderThumbnail(body.label, body.projectId)
   }

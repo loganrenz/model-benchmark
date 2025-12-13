@@ -5,7 +5,7 @@ import { badRequest, internalError } from '~/server/utils/errors'
 import { mapDbProjectToProject } from '~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const projectId = getRouterParam(event, 'id')
   const body = await readBody(event)
   const { label, folder } = body

@@ -6,7 +6,7 @@ import { mapDbPromptToPrompt } from '~/server/utils/mappers'
 import { badRequest, internalError } from '~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const projectId = getRouterParam(event, 'id')
   const query = getQuery(event)
   const includePrompts = query.includePrompts === 'true'

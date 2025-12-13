@@ -6,7 +6,7 @@ import { badRequest, internalError } from '~/server/utils/errors'
 import { validateDifficulty } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const projectId = getRouterParam(event, 'id')
   const query = getQuery(event)
   const difficulty = query.difficulty as PromptDifficulty | undefined

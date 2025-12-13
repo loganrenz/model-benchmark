@@ -1,4 +1,5 @@
 import type { Database as D1Database } from '@cloudflare/d1'
+import type { H3Event } from 'h3'
 import { join, dirname } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 
@@ -115,14 +116,28 @@ let dbInitialized = false
 
 /**
  * Get database instance - works in both dev (SQLite) and production (D1)
+ * In production on Cloudflare Pages, pass the event to access the D1 binding
  */
-export async function getDatabase(): Promise<D1Database | null> {
+export async function getDatabase(event?: H3Event): Promise<D1Database | null> {
   // In production, use D1
   if (!import.meta.dev) {
-    // useD1Database is auto-imported by Nitro in production
     try {
+      // Try to get D1 from event context first (Cloudflare Pages)
+      if (event) {
+        const cf = (event.context as any).cloudflare
+        if (cf?.env?.DB) {
+          return cf.env.DB as D1Database
+        }
+      }
+      
+      // Fallback to Nitro's useD1Database (may work in some contexts)
       // @ts-ignore - useD1Database is auto-imported in production
-      return useD1Database('DB')
+      if (typeof useD1Database === 'function') {
+        return useD1Database('DB')
+      }
+      
+      console.error('D1 database binding not found')
+      return null
     } catch (e) {
       console.error('Failed to get D1 database:', e)
       return null

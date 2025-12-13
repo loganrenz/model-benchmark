@@ -3,7 +3,7 @@ import { SubmissionsRepository } from '~/server/repositories/submissions'
 import { badRequest, internalError } from '~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
-  const db = await requireDatabase()
+  const db = await requireDatabase(event)
   const id = getRouterParam(event, 'id')
 
   if (!id) {
