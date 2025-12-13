@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave Pattern Generator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #000;
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    canvas { 
+      border: 2px solid #222;
+      box-shadow: 0 0 40px rgba(0, 200, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = 800;
+    canvas.height = 600;
+    
+    const config = {
+      waveSpeed: 0.05,
+      waveLength: 40,
+      amplitude: 20,
+      sources: [
+        { x: 200, y: 300 },
+        { x: 600, y: 300 },
+        { x: 400, y: 150 },
+        { x: 400, y: 450 }
+      ]
+    };
+    
+    let time = 0;
+    
+    function getWaveValue(x, y, time) {
+      let sum = 0;
+      
+      for (let source of config.sources) {
+        const dx = x - source.x;
+        const dy = y - source.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Calculate wave value
+        const wave = Math.sin(distance / config.waveLength - time);
+        sum += wave;
+      }
+      
+      return sum / config.sources.length;
+    }
+    
+    function drawWaves() {
+      const imageData = ctx.createImageData(canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const value = getWaveValue(x, y, time);
+          const index = (y * canvas.width + x) * 4;
+          
+          // Map wave value to color
+          const normalized = (value + 1) / 2; // 0 to 1
+          
+          if (normalized > 0.5) {
+            // Positive interference - cyan to white
+            const intensity = (normalized - 0.5) * 2;
+            data[index] = 100 + intensity * 155;     // R
+            data[index + 1] = 200 + intensity * 55;  // G
+            data[index + 2] = 255;                   // B
+          } else {
+            // Negative interference - black to cyan
+            const intensity = normalized * 2;
+            data[index] = intensity * 100;           // R
+            data[index + 1] = intensity * 200;       // G
+            data[index + 2] = intensity * 255;       // B
+          }
+          
+          data[index + 3] = 255; // Alpha
+        }
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      
+      // Draw source points
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      config.sources.forEach(source => {
+        ctx.beginPath();
+        ctx.arc(source.x, source.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Pulsing ring
+        const pulseRadius = ((time * 10) % 30) + 5;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${1 - pulseRadius / 35})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(source.x, source.y, pulseRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    }
+    
+    function animate() {
+      time += config.waveSpeed;
+      drawWaves();
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
+  </script>
+</body>
+</html>

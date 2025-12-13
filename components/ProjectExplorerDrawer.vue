@@ -44,26 +44,26 @@ function handleSelect(payload: { key: string; src: string; label: string }) {
   <!-- Drawer -->
   <div
     class="fixed inset-x-0 bottom-0 z-50 transition-transform duration-300"
-    :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-4rem)]'"
+    :class="isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-5rem)]'"
   >
-    <div class="mx-auto max-w-3xl rounded-t-2xl border border-gray-200 bg-white shadow-xl">
+    <div class="mx-auto h-screen max-w-3xl rounded-t-2xl border border-gray-200 bg-white shadow-xl md:h-[85vh]">
       <!-- Handle -->
       <button
-        class="flex w-full items-center justify-between px-6 py-4 hover:bg-gray-50"
+        class="flex w-full items-center justify-between border-b-2 border-gray-300 bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-5 hover:from-blue-100 hover:to-purple-100"
         @click="isOpen = !isOpen"
       >
         <div class="flex items-center gap-3">
-          <div class="h-1 w-12 rounded-full bg-gray-300" />
-          <span class="text-sm font-semibold text-gray-900">Projects</span>
+          <div class="h-1.5 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500" />
+          <span class="text-base font-bold text-gray-900">Projects</span>
         </div>
         <UIcon
           :name="isOpen ? 'i-heroicons-chevron-down' : 'i-heroicons-chevron-up'"
-          class="h-5 w-5 text-gray-500"
+          class="h-6 w-6 text-gray-700"
         />
       </button>
 
       <!-- Content -->
-      <div class="max-h-[calc(75vh-4rem)] overflow-y-auto border-t border-gray-200 p-4">
+      <div class="h-[calc(100%-5rem)] overflow-y-auto border-t border-gray-200 p-4">
         <ProjectTree
           :manifest="manifest"
           :active-key="activeKey"
