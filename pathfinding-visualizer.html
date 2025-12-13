@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pathfinding Algorithm Visualizer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #1a1a1a;
+      font-family: Arial, sans-serif;
+    }
+    
+    #canvas {
+      border: 2px solid #333;
+      background: #2a2a2a;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <script>
+    // Configuration
+    const GRID_SIZE = 40; // 40x40 grid (exceeds 30x30 requirement)
+    const CELL_SIZE = 15;
+    const OBSTACLE_PROBABILITY = 0.3; // 30% chance of obstacle
+    
+    // Colors
+    const COLORS = {
+      WALL: '#2c3e50',
+      START: '#27ae60',
+      END: '#e74c3c',
+      EXPLORED: '#3498db',
+      PATH: '#f39c12',
+      EMPTY: '#ecf0f1'
+    };
+    
+    // Canvas setup
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = GRID_SIZE * CELL_SIZE;
+    canvas.height = GRID_SIZE * CELL_SIZE;
+    
+    // Grid representation: 0 = empty, 1 = wall
+    const grid = [];
+    let start = { x: 0, y: 0 };
+    let end = { x: GRID_SIZE - 1, y: GRID_SIZE - 1 };
+    
+    // Initialize grid with random obstacles
+    function initializeGrid() {
+      for (let y = 0; y < GRID_SIZE; y++) {
+        grid[y] = [];
+        for (let x = 0; x < GRID_SIZE; x++) {
+          if (Math.random() < OBSTACLE_PROBABILITY) {
+            grid[y][x] = 1; // Wall
+          } else {
+            grid[y][x] = 0; // Empty
+          }
+        }
+      }
+      
+      // Ensure start and end are not walls
+      grid[start.y][start.x] = 0;
+      grid[end.y][end.x] = 0;
+      
+      // Ensure there's a clear path (remove walls around start and end)
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const ny = start.y + dy;
+          const nx = start.x + dx;
+          if (ny >= 0 && ny < GRID_SIZE && nx >= 0 && nx < GRID_SIZE) {
+            grid[ny][nx] = 0;
+          }
+          const ey = end.y + dy;
+          const ex = end.x + dx;
+          if (ey >= 0 && ey < GRID_SIZE && ex >= 0 && ex < GRID_SIZE) {
+            grid[ey][ex] = 0;
+          }
+        }
+      }
+    }
+    
+    // Draw the grid
+    function drawGrid() {
+      for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+          const cellX = x * CELL_SIZE;
+          const cellY = y * CELL_SIZE;
+          
+          if (grid[y][x] === 1) {
+            ctx.fillStyle = COLORS.WALL;
+            ctx.fillRect(cellX, cellY, CELL_SIZE, CELL_SIZE);
+          } else {
+            ctx.fillStyle = COLORS.EMPTY;
+            ctx.fillRect(cellX, cellY, CELL_SIZE, CELL_SIZE);
+          }
+        }
+      }
+      
+      // Draw start point
+      ctx.fillStyle = COLORS.START;
+      ctx.fillRect(start.x * CELL_SIZE, start.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      
+      // Draw end point
+      ctx.fillStyle = COLORS.END;
+      ctx.fillRect(end.x * CELL_SIZE, end.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    }
+    
+    // Heuristic function for A* (Manhattan distance)
+    function heuristic(a, b) {
+      return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+    
+    // A* pathfinding algorithm
+    function astar() {
+      const openSet = [{ x: start.x, y: start.y, g: 0, h: heuristic(start, end), f: heuristic(start, end) }];
+      const closedSet = new Set();
+      const cameFrom = new Map();
+      const gScore = new Map();
+      const exploredCells = [];
+      
+      gScore.set(`${start.x},${start.y}`, 0);
+      
+      while (openSet.length > 0) {
+        // Find node with lowest f score
+        let currentIndex = 0;
+        for (let i = 1; i < openSet.length; i++) {
+          if (openSet[i].f < openSet[currentIndex].f) {
+            currentIndex = i;
+          }
+        }
+        
+        const current = openSet[currentIndex];
+        
+        // Check if we reached the end
+        if (current.x === end.x && current.y === end.y) {
+          // Reconstruct path
+          const path = [];
+          let node = current;
+          while (node) {
+            path.push({ x: node.x, y: node.y });
+            const key = `${node.x},${node.y}`;
+            node = cameFrom.get(key);
+          }
+          return { path: path.reverse(), explored: exploredCells };
+        }
+        
+        // Remove current from openSet
+        openSet.splice(currentIndex, 1);
+        closedSet.add(`${current.x},${current.y}`);
+        
+        // Explore neighbors
+        const neighbors = [
+          { x: current.x + 1, y: current.y },
+          { x: current.x - 1, y: current.y },
+          { x: current.x, y: current.y + 1 },
+          { x: current.x, y: current.y - 1 }
+        ];
+        
+        for (const neighbor of neighbors) {
+          const key = `${neighbor.x},${neighbor.y}`;
+          
+          // Skip if out of bounds
+          if (neighbor.x < 0 || neighbor.x >= GRID_SIZE || 
+              neighbor.y < 0 || neighbor.y >= GRID_SIZE) {
+            continue;
+          }
+          
+          // Skip if wall
+          if (grid[neighbor.y][neighbor.x] === 1) {
+            continue;
+          }
+          
+          // Skip if already evaluated
+          if (closedSet.has(key)) {
+            continue;
+          }
+          
+          // Calculate tentative g score
+          const tentativeG = gScore.get(`${current.x},${current.y}`) + 1;
+          
+          // Check if this path is better
+          if (!gScore.has(key) || tentativeG < gScore.get(key)) {
+            cameFrom.set(key, current);
+            gScore.set(key, tentativeG);
+            const h = heuristic(neighbor, end);
+            const f = tentativeG + h;
+            
+            // Check if neighbor is in openSet
+            const inOpenSet = openSet.some(n => n.x === neighbor.x && n.y === neighbor.y);
+            if (!inOpenSet) {
+              openSet.push({ x: neighbor.x, y: neighbor.y, g: tentativeG, h: h, f: f });
+              exploredCells.push({ x: neighbor.x, y: neighbor.y });
+            }
+          }
+        }
+      }
+      
+      // No path found
+      return { path: [], explored: exploredCells };
+    }
+    
+    // Animate the pathfinding process
+    async function animatePathfinding() {
+      drawGrid();
+      
+      const result = astar();
+      const explored = result.explored;
+      const path = result.path;
+      
+      // Animate exploration
+      for (let i = 0; i < explored.length; i++) {
+        const cell = explored[i];
+        // Skip start and end cells
+        if ((cell.x === start.x && cell.y === start.y) || 
+            (cell.x === end.x && cell.y === end.y)) {
+          continue;
+        }
+        
+        ctx.fillStyle = COLORS.EXPLORED;
+        ctx.fillRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        
+        // Small delay for animation
+        if (i % 5 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+      }
+      
+      // Draw final path
+      if (path.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        for (let i = 0; i < path.length; i++) {
+          const cell = path[i];
+          // Skip start and end cells (they have their own colors)
+          if ((cell.x === start.x && cell.y === start.y) || 
+              (cell.x === end.x && cell.y === end.y)) {
+            continue;
+          }
+          
+          ctx.fillStyle = COLORS.PATH;
+          ctx.fillRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+      }
+    }
+    
+    // Initialize and run
+    initializeGrid();
+    animatePathfinding();
+  </script>
+</body>
+</html>
