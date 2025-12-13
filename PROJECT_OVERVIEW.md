@@ -70,11 +70,12 @@ Structure:
    - Safe area insets for mobile notches
 
 2. **ProjectTree.vue**
-   - Uses @nuxt/ui UTree component
+   - Custom tree implementation with expandable/collapsible projects
    - Builds tree structure from manifest
-   - Three node types: root, project, model
+   - Two node types: project (folder) and model (selectable items)
    - Only models are selectable
-   - Auto-expands root and highlights active model
+   - Auto-expands all projects by default and highlights active model
+   - Uses UIcon for folder and cube icons
 
 ### Composables
 1. **useBodyScrollLock.ts**
