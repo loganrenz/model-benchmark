@@ -1,1 +1,258 @@
 @import "tailwindcss";
+
+/* iOS Safe Area Support */
+@supports (padding: max(0px)) {
+  .safe-area-inset {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .pb-safe {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+  
+  .pt-safe {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+}
+
+/* Additional safe area support for notched devices */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Smooth scrolling for mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better touch scrolling on iOS */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Prevent text selection on buttons and interactive elements */
+button {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Enhanced transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbar for webkit browsers */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Ensure body fills viewport on mobile */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Better focus states for accessibility */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Smooth animations with hardware acceleration */
+.will-change-transform {
+  will-change: transform;
+}
+
+/* Optimize touch interactions */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  button:hover {
+    transform: none;
+  }
+  
+  /* Ensure proper touch target sizes */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Prevent rubber banding on iOS */
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Improve text rendering */
+body {
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1;
+  font-kerning: normal;
+}
+
+/* Enhanced backdrop blur support */
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+  .backdrop-blur-lg {
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+  
+  .backdrop-blur-sm {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+}
+
+/* Smooth gradient transitions */
+.bg-gradient-to-r,
+.bg-gradient-to-br,
+.bg-gradient-to-b {
+  background-size: 200% 200%;
+  transition: background-position 0.3s ease;
+}
+
+/* Improve shadow rendering */
+.shadow-xl,
+.shadow-2xl,
+.shadow-lg {
+  will-change: box-shadow;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Better active states on mobile */
+@media (hover: none) and (pointer: coarse) {
+  .active\:scale-95:active {
+    transform: scale(0.95);
+  }
+  
+  .active\:bg-gray-200\/50:active {
+    background-color: rgb(229 231 235 / 0.5);
+  }
+}
+
+/* Ensure content doesn't shift on scroll */
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Improved focus ring for mobile */
+@media (hover: none) and (pointer: coarse) {
+  button:focus-visible,
+  a:focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+}
+
+/* Loading animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-ping {
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a,
+[role="button"] {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Improve iframe rendering */
+iframe {
+  display: block;
+  border: none;
+  color-scheme: light;
+}
+
+/* Better scrollbar for Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+/* Ensure proper stacking context */
+.fixed {
+  transform: translateZ(0);
+}
+
+/* Optimize repaints */
+.transition-transform {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Better touch target for small screens */
+@media (max-width: 640px) {
+  button,
+  a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Larger tap targets */
+  .text-sm {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+}
+
+/* Premium shadows */
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 1px rgba(0, 0, 0, 0.05);
+}
