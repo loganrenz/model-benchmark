@@ -51,6 +51,7 @@ const isSavingProject = ref(false)
 const isInitializing = ref(false)
 const isBackfilling = ref(false)
 const isSeeding = ref(false)
+const generatingThumbnailFor = ref<string | null>(null)
 
 // Submission functions
 async function handleReviewSubmission(status: 'approved' | 'rejected', thumbnail?: string) {
@@ -227,6 +228,24 @@ async function seedSubmissions() {
   }
 }
 
+async function generateThumbnailForSubmission(submissionId: string, event: Event) {
+  event.preventDefault()
+  event.stopPropagation()
+  
+  generatingThumbnailFor.value = submissionId
+  try {
+    await $fetch(`/api/admin/submissions/${submissionId}/thumbnail`, {
+      method: 'POST'
+    })
+    showSuccess('Thumbnail generated successfully')
+    await refreshSubmissions()
+  } catch (error: any) {
+    showError(error.data?.statusMessage || 'Failed to generate thumbnail')
+  } finally {
+    generatingThumbnailFor.value = null
+  }
+}
+
 // Format date helper
 function formatDate(dateString: string | undefined) {
   if (!dateString) return 'N/A'
@@ -336,14 +355,28 @@ function formatDate(dateString: string | undefined) {
             v-for="submission in submissionsData.submissions"
             :key="submission.id"
             :to="`/projects/${submission.projectId}/${submission.id}`"
-            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer block"
+            class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer block"
           >
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
+            <div class="flex items-start gap-4">
+              <!-- Thumbnail -->
+              <div class="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                <img 
+                  v-if="submission.thumbnail" 
+                  :src="submission.thumbnail" 
+                  :alt="submission.label"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                  <UIcon name="i-heroicons-photo" class="size-8" />
+                </div>
+              </div>
+              
+              <!-- Content -->
+              <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-3 mb-2">
-                  <h3 class="text-lg font-semibold text-gray-900">{{ submission.label }}</h3>
+                  <h3 class="text-lg font-semibold text-gray-900 truncate">{{ submission.label }}</h3>
                   <span :class="[
-                    'px-2 py-1 text-xs font-medium rounded-full',
+                    'px-2 py-1 text-xs font-medium rounded-full flex-shrink-0',
                     submission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                     submission.status === 'approved' ? 'bg-green-100 text-green-800' :
                     'bg-red-100 text-red-800'
@@ -351,19 +384,34 @@ function formatDate(dateString: string | undefined) {
                     {{ submission.status }}
                   </span>
                 </div>
-                <div class="text-sm text-gray-600 space-y-1">
+                <div class="text-sm text-gray-600 space-y-0.5">
                   <div><span class="font-medium">Project:</span> {{ submission.projectId }}</div>
                   <div><span class="font-medium">Agent:</span> {{ submission.agentName }}</div>
                   <div><span class="font-medium">Submitted:</span> {{ formatDate(submission.submittedAt) }}</div>
                 </div>
               </div>
-              <UButton
-                color="neutral"
-                variant="ghost"
-                @click.stop="openSubmission(submission)"
-              >
-                Review
-              </UButton>
+              
+              <!-- Actions -->
+              <div class="flex-shrink-0 flex flex-col gap-2">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  @click.stop="openSubmission(submission)"
+                >
+                  Review
+                </UButton>
+                <UButton
+                  color="primary"
+                  variant="outline"
+                  size="sm"
+                  :loading="generatingThumbnailFor === submission.id"
+                  :disabled="generatingThumbnailFor !== null"
+                  @click="generateThumbnailForSubmission(submission.id!, $event)"
+                >
+                  {{ submission.thumbnail ? 'Regen' : 'Gen' }} Thumb
+                </UButton>
+              </div>
             </div>
           </NuxtLink>
         </div>
