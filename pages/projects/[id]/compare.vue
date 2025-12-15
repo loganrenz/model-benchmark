@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Project } from '~/types/prompt'
+import type { Submission } from '~/types/submission'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,13 +14,17 @@ const selectedIds = computed(() => {
   return Array.isArray(ids) ? ids : [ids]
 })
 
-const { data: projectData, error } = await useFetch<Project>(`/api/projects/${projectId.value}?includeModels=true`)
+const { data: projectData, error: projectError } = await useFetch<Project>(`/api/projects/${projectId.value}?includeModels=true`)
+
+// Fetch all selected submissions
+const submissionsData = await Promise.all(
+  selectedIds.value.map(id => 
+    $fetch<Submission>(`/api/submissions/${id}`).catch(() => null)
+  )
+)
 
 const selectedSubmissions = computed(() => {
-  if (!projectData.value?.models) return []
-  return projectData.value.models.filter(model => 
-    model.submissionId && selectedIds.value.includes(model.submissionId)
-  )
+  return submissionsData.filter(s => s !== null) as Submission[]
 })
 
 const breadcrumbs = computed(() => [
@@ -42,12 +47,18 @@ function removeSubmission(submissionId: string) {
 function clearAll() {
   router.push(`/projects/${projectId.value}`)
 }
+
+// Get the iframe src for a submission
+function getSubmissionSrc(submission: Submission) {
+  // Use the filePath from the submission which is like "agent-name/index.html"
+  return `/projects/${projectData.value?.folder}/${submission.filePath}`
+}
 </script>
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <!-- Error State -->
-    <div v-if="error" class="flex flex-1 items-center justify-center p-8">
+    <div v-if="projectError" class="flex flex-1 items-center justify-center p-8">
       <div class="w-full max-w-sm text-center">
         <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-red-50 to-red-100 shadow-lg shadow-red-100/50">
           <UIcon name="i-heroicons-exclamation-triangle" class="size-9 text-red-600" />
@@ -111,7 +122,7 @@ function clearAll() {
       >
         <div
           v-for="submission in selectedSubmissions"
-          :key="submission.submissionId"
+          :key="submission.id"
           class="relative rounded-2xl bg-white/80 border border-gray-200/80 shadow-lg overflow-hidden"
         >
           <!-- Header -->
@@ -126,7 +137,7 @@ function clearAll() {
               </div>
             </div>
             <button
-              @click="removeSubmission(submission.submissionId!)"
+              @click="removeSubmission(submission.id!)"
               class="flex items-center justify-center size-8 rounded-lg hover:bg-white/50 transition-colors"
               aria-label="Remove from comparison"
             >
@@ -137,8 +148,7 @@ function clearAll() {
           <!-- Preview -->
           <div class="aspect-video bg-gray-100">
             <iframe
-              v-if="submission.submissionId"
-              :src="`/projects/${projectId}/${submission.folder}/index.html`"
+              :src="getSubmissionSrc(submission)"
               class="w-full h-full border-0"
               sandbox="allow-scripts allow-same-origin"
               :title="`Preview of ${submission.label}`"
@@ -148,7 +158,7 @@ function clearAll() {
           <!-- Actions -->
           <div class="p-4 bg-gray-50 border-t border-gray-200 flex gap-2">
             <NuxtLink
-              :to="`/projects/${projectId}/${submission.submissionId}`"
+              :to="`/projects/${projectId}/${submission.id}`"
               class="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all"
             >
               <UIcon name="i-heroicons-eye" class="size-4" />
