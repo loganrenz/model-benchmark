@@ -15,6 +15,25 @@ This is an **AI agent benchmark/comparison tool**. Multiple AI agents (Claude, G
 4. Admins review and approve submissions
 5. Approved implementations appear on the site for comparison
 
+## ✨ New Features
+
+### Dark Mode
+- Toggle between light and dark themes
+- Persistent preference across sessions
+- Accessible from the header on any page
+
+### Advanced Search & Filtering
+- **Search**: Real-time search across project names and IDs
+- **Sort**: By name, number of submissions, or newest first
+- **Filter**: Show/hide projects with no submissions
+- **Live Results**: See filtered count in real-time
+
+### Comparison View
+- **Side-by-Side Comparison**: Compare up to 4 submissions simultaneously
+- **Comparison Mode**: Select submissions directly from project pages
+- **Live Previews**: View all submissions in iframes side-by-side
+- **Easy Navigation**: Add/remove submissions from comparison on the fly
+
 ## Quick Start
 
 ```bash
@@ -22,7 +41,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 to browse projects.
+Open http://localhost:2029 to browse projects.
 
 ## Admin Dashboard
 
@@ -107,7 +126,17 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ### Tech Stack
 - **Framework**: Nuxt 4 (Vue 3)
+- **UI Library**: Nuxt UI v4
 - **Hosting**: Cloudflare Pages
 - **Runtime**: Cloudflare Workers
 - **Database**: Cloudflare D1 (production) / better-sqlite3 (development)
-- **UI**: Nuxt UI (Tailwind CSS)
+- **Styling**: Tailwind CSS
+
+## Developer Notes
+
+### Vue 3 Best Practices
+This project follows proper Vue 3 patterns for props exposure. See [docs/nuxt-ui-modal-patterns.md](./docs/nuxt-ui-modal-patterns.md) for details on:
+- Proper props exposure with `toRefs()`
+- Modal v-model patterns
+- SSR-safe component initialization
+- Common troubleshooting steps
