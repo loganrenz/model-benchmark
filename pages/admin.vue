@@ -213,6 +213,12 @@ async function onProjectSaved() {
 async function onSubmissionReviewed() {
   await refreshSubmissions()
 }
+
+const deleteProjectMessage = computed(() => {
+  return projectToDelete.value 
+    ? `Are you sure you want to delete "${projectToDelete.value.label}"? This will also delete all associated prompts.`
+    : ''
+})
 </script>
 
 <template>
@@ -435,7 +441,7 @@ async function onSubmissionReviewed() {
         :open="showDeleteConfirm"
         @update:open="showDeleteConfirm = $event"
         title="Delete Project"
-        :message="projectToDelete ? `Are you sure you want to delete \"${projectToDelete.label}\"? This will also delete all associated prompts.` : ''"
+        :message="deleteProjectMessage"
         confirm-text="Delete"
         variant="danger"
         @confirmed="deleteProject"
