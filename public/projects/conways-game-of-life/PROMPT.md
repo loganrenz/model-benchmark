@@ -17,3 +17,4 @@ Create an implementation of Conway's Game of Life cellular automaton. Include:
 Use any technology you prefer (Canvas, SVG, etc.). Focus on clear visualization and smooth performance.
 
 
+

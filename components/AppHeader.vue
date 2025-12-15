@@ -102,6 +102,16 @@ const isHome = computed(() => route.path === '/')
           <slot name="actions">
             <!-- Default navigation links shown on home/project pages -->
             <NuxtLink
+              to="/admin"
+              class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all"
+              :class="dark 
+                ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white' 
+                : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'"
+            >
+              <UIcon name="i-heroicons-cog-6-tooth" class="size-4" />
+              <span>Admin</span>
+            </NuxtLink>
+            <NuxtLink
               to="/instructions"
               class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all"
               :class="dark 
