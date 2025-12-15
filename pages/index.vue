@@ -5,6 +5,12 @@ const { data: projectsData, error, pending } = await useFetch<{
   projects: Project[]
   total: number
 }>('/api/projects?includeModels=true')
+
+const filteredProjects = ref<Project[]>([])
+
+function updateFilteredProjects(projects: Project[]) {
+  filteredProjects.value = projects
+}
 </script>
 
 <template>
@@ -51,23 +57,39 @@ const { data: projectsData, error, pending } = await useFetch<{
 
     <!-- Projects Grid -->
     <div v-else-if="projectsData && projectsData.projects.length > 0">
-      <div class="mb-8 flex items-center justify-between">
-        <div>
-          <h2 class="text-xl font-bold text-gray-900">
+      <div class="mb-8">
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-1">
             {{ projectsData.total }} {{ projectsData.total === 1 ? 'Project' : 'Projects' }}
           </h2>
-          <p class="text-sm text-gray-600 mt-1">
+          <p class="text-sm text-gray-600">
             Browse implementations by project
           </p>
         </div>
+
+        <!-- Filter component -->
+        <ProjectsFilter 
+          :projects="projectsData.projects" 
+          @update:filtered="updateFilteredProjects"
+        />
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Projects grid -->
+      <div v-if="filteredProjects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <ProjectCard
-          v-for="project in projectsData.projects"
+          v-for="project in filteredProjects"
           :key="project.id"
           :project="project"
         />
+      </div>
+
+      <!-- No results message -->
+      <div v-else class="flex flex-col items-center justify-center py-12">
+        <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg">
+          <UIcon name="i-heroicons-funnel" class="size-9 text-gray-400" />
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No projects match your filters</h3>
+        <p class="text-gray-600 text-sm">Try adjusting your search or filters</p>
       </div>
     </div>
 

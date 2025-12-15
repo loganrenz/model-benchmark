@@ -21,6 +21,34 @@ const breadcrumbs = computed(() => {
 const searchQuery = ref(route.query.search as string || '')
 const selectedAgent = ref<string>((route.query.agent as string) || '')
 
+// Comparison mode
+const comparisonMode = ref(false)
+const selectedForComparison = ref<Set<string>>(new Set())
+
+function toggleComparisonMode() {
+  comparisonMode.value = !comparisonMode.value
+  if (!comparisonMode.value) {
+    selectedForComparison.value.clear()
+  }
+}
+
+function toggleSubmissionSelection(submissionId: string) {
+  if (selectedForComparison.value.has(submissionId)) {
+    selectedForComparison.value.delete(submissionId)
+  } else {
+    selectedForComparison.value.add(submissionId)
+  }
+}
+
+function startComparison() {
+  if (selectedForComparison.value.size > 0) {
+    router.push({
+      path: `/projects/${projectId}/compare`,
+      query: { compare: Array.from(selectedForComparison.value) }
+    })
+  }
+}
+
 // Get unique agent names from models
 const uniqueAgents = computed(() => {
   if (!project.value?.models) return []
@@ -150,57 +178,128 @@ function clearFilters() {
       </div>
 
       <!-- Filters -->
-      <div v-if="project.models && project.models.length > 0" class="mb-6 flex flex-wrap items-center gap-4">
-        <!-- Search -->
-        <div class="relative flex-1 min-w-[200px] max-w-md">
-          <UIcon name="i-heroicons-magnifying-glass" class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search submissions..."
-            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-            aria-label="Search submissions"
-          />
+      <div v-if="project.models && project.models.length > 0" class="mb-6 space-y-4">
+        <!-- Top action bar -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-4 flex-1">
+            <!-- Search -->
+            <div class="relative flex-1 min-w-[200px] max-w-md">
+              <UIcon name="i-heroicons-magnifying-glass" class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search submissions..."
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                aria-label="Search submissions"
+              />
+            </div>
+            
+            <!-- Agent Filter -->
+            <div v-if="uniqueAgents.length > 1" class="relative">
+              <select
+                v-model="selectedAgent"
+                class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
+              >
+                <option value="">All Agents ({{ submissionCount }})</option>
+                <option v-for="agent in uniqueAgents" :key="agent" :value="agent">
+                  {{ agent }}
+                </option>
+              </select>
+              <UIcon name="i-heroicons-chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
+            </div>
+            
+            <!-- Clear filters -->
+            <button
+              v-if="hasFilters"
+              @click="clearFilters"
+              class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-lg"
+              aria-label="Clear all filters"
+            >
+              <UIcon name="i-heroicons-x-mark" class="size-4" aria-hidden="true" />
+              Clear
+            </button>
+            
+            <!-- Result count -->
+            <div v-if="hasFilters" class="text-sm text-gray-500">
+              {{ filteredCount }} of {{ submissionCount }} submissions
+            </div>
+          </div>
+
+          <!-- Comparison mode toggle -->
+          <div class="flex items-center gap-3">
+            <button
+              v-if="!comparisonMode && filteredModels.length >= 2"
+              @click="toggleComparisonMode"
+              class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 transition-all"
+            >
+              <UIcon name="i-heroicons-arrows-right-left" class="size-4" />
+              Compare
+            </button>
+          </div>
         </div>
-        
-        <!-- Agent Filter -->
-        <div v-if="uniqueAgents.length > 1" class="relative">
-          <select
-            v-model="selectedAgent"
-            class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
-          >
-            <option value="">All Agents ({{ submissionCount }})</option>
-            <option v-for="agent in uniqueAgents" :key="agent" :value="agent">
-              {{ agent }}
-            </option>
-          </select>
-          <UIcon name="i-heroicons-chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
-        </div>
-        
-        <!-- Clear filters -->
-        <button
-          v-if="hasFilters"
-          @click="clearFilters"
-          class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-lg"
-          aria-label="Clear all filters"
-        >
-          <UIcon name="i-heroicons-x-mark" class="size-4" aria-hidden="true" />
-          Clear
-        </button>
-        
-        <!-- Result count -->
-        <div v-if="hasFilters" class="text-sm text-gray-500">
-          {{ filteredCount }} of {{ submissionCount }} submissions
+
+        <!-- Comparison mode toolbar -->
+        <div v-if="comparisonMode" class="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200">
+          <div class="flex items-center gap-3">
+            <div class="flex size-10 items-center justify-center rounded-xl bg-indigo-600">
+              <UIcon name="i-heroicons-arrows-right-left" class="size-5 text-white" />
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900">Comparison Mode</p>
+              <p class="text-xs text-gray-600">
+                {{ selectedForComparison.size }} selected
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              @click="startComparison"
+              :disabled="selectedForComparison.size === 0"
+              class="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <UIcon name="i-heroicons-check" class="size-4" />
+              Compare ({{ selectedForComparison.size }})
+            </button>
+            <button
+              @click="toggleComparisonMode"
+              class="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
 
       <div v-if="filteredModels.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <SubmissionThumbnail
+        <div
           v-for="model in filteredModels"
           :key="model.id"
-          :model="model"
-          :project-id="project.id"
-        />
+          class="relative"
+        >
+          <!-- Comparison checkbox overlay -->
+          <div
+            v-if="comparisonMode && model.submissionId"
+            class="absolute top-3 right-3 z-10"
+          >
+            <button
+              @click.prevent="toggleSubmissionSelection(model.submissionId)"
+              class="flex items-center justify-center size-8 rounded-lg shadow-lg transition-all"
+              :class="selectedForComparison.has(model.submissionId)
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white'"
+            >
+              <UIcon 
+                :name="selectedForComparison.has(model.submissionId) ? 'i-heroicons-check' : 'i-heroicons-plus'" 
+                class="size-5"
+              />
+            </button>
+          </div>
+          
+          <SubmissionThumbnail
+            :model="model"
+            :project-id="project.id"
+          />
+        </div>
       </div>
       
       <!-- No results from filter -->

@@ -11,6 +11,9 @@ const props = defineProps<{
   fullWidth?: boolean
   noPadding?: boolean
 }>()
+
+// Expose props for template usage
+const { breadcrumbs, dark, fullWidth, noPadding } = toRefs(props)
 </script>
 
 <template>

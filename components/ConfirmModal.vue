@@ -20,8 +20,11 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
 
+// Expose props for template usage
+const { open, title, message, confirmText, cancelText, variant } = toRefs(props)
+
 const isOpen = computed({
-  get: () => props.open,
+  get: () => open.value,
   set: (value) => emit('update:open', value)
 })
 
@@ -41,7 +44,7 @@ function handleCancel() {
 }
 
 const variantClasses = computed(() => {
-  switch (props.variant) {
+  switch (variant.value) {
     case 'danger':
       return {
         button: 'bg-red-600 hover:bg-red-700 text-white',

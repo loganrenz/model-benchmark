@@ -11,8 +11,11 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
 
+// Expose props for template usage
+const { submission, open } = toRefs(props)
+
 const isOpen = computed({
-  get: () => props.open,
+  get: () => open.value,
   set: (value) => emit('update:open', value)
 })
 
@@ -26,9 +29,9 @@ onMounted(() => {
 })
 
 // Reset notes when modal opens
-watch(() => props.open, (isOpenValue) => {
-  if (isOpenValue && props.submission) {
-    reviewerNotes.value = props.submission.reviewerNotes || ''
+watch(open, (isOpenValue) => {
+  if (isOpenValue && submission.value) {
+    reviewerNotes.value = submission.value.reviewerNotes || ''
     iframeError.value = false
   } else if (!isOpenValue) {
     // Clean up when modal closes
@@ -38,7 +41,7 @@ watch(() => props.open, (isOpenValue) => {
 })
 
 // Reset iframe error when submission changes
-watch(() => props.submission, () => {
+watch(submission, () => {
   iframeError.value = false
 })
 
@@ -48,9 +51,9 @@ function formatDate(dateString: string | undefined) {
 }
 
 const safeHtmlContent = computed(() => {
-  if (!props.submission?.htmlContent) return ''
+  if (!submission.value?.htmlContent) return ''
   // Ensure the HTML content is properly formatted
-  const content = props.submission.htmlContent.trim()
+  const content = submission.value.htmlContent.trim()
 
   // If content doesn't start with <, wrap it in a basic HTML structure
   if (!content.startsWith('<')) {
@@ -111,11 +114,11 @@ onUnmounted(() => {
 })
 
 async function handleReview(status: 'approved' | 'rejected') {
-  if (!props.submission) return
+  if (!submission.value) return
 
   isReviewing.value = true
   try {
-    await $fetch(`/api/submissions/${props.submission.id}`, {
+    await $fetch(`/api/submissions/${submission.value.id}`, {
       method: 'PUT',
       body: {
         status,
