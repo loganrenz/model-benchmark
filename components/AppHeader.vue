@@ -10,6 +10,9 @@ const props = defineProps<{
   dark?: boolean
 }>()
 
+// Expose props for template usage
+const { breadcrumbs, dark } = toRefs(props)
+
 const route = useRoute()
 
 // Determine if we're on the home page

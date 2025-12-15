@@ -11,8 +11,11 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
 
+// Expose props for template usage
+const { project, open } = toRefs(props)
+
 const isOpen = computed({
-  get: () => props.open,
+  get: () => open.value,
   set: (value) => emit('update:open', value)
 })
 
@@ -30,13 +33,13 @@ onMounted(() => {
 })
 
 // Reset form when modal opens
-watch(() => props.open, (isOpenValue) => {
+watch(open, (isOpenValue) => {
   if (isOpenValue) {
-    if (props.project) {
+    if (project.value) {
       form.value = {
-        id: props.project.id,
-        label: props.project.label,
-        folder: props.project.folder
+        id: project.value.id,
+        label: project.value.label,
+        folder: project.value.folder
       }
     } else {
       form.value = { id: '', label: '', folder: '' }
@@ -51,8 +54,8 @@ const canSave = computed(() => {
 async function save() {
   isSaving.value = true
   try {
-    if (props.project) {
-      await $fetch(`/api/admin/projects/${props.project.id}`, {
+    if (project.value) {
+      await $fetch(`/api/admin/projects/${project.value.id}`, {
         method: 'PUT',
         body: {
           label: form.value.label,
