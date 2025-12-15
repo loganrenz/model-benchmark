@@ -302,10 +302,11 @@ onMounted(() => {
         </div>
         <button
           @click="success = false"
-          class="text-green-600 hover:text-green-700 transition-colors"
+          class="text-green-600 hover:text-green-700 transition-colors flex items-center justify-center min-w-[44px] min-h-[44px] text-lg font-bold leading-none"
           aria-label="Dismiss"
+          title="Dismiss"
         >
-          <UIcon name="i-heroicons-x-mark" class="size-4" />
+          ×
         </button>
       </div>
 
