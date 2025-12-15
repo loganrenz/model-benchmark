@@ -15,6 +15,9 @@ const { breadcrumbs, dark } = toRefs(props)
 
 const route = useRoute()
 
+// Dark mode
+const { isDark, toggle: toggleDarkMode } = useDarkMode()
+
 // Determine if we're on the home page
 const isHome = computed(() => route.path === '/')
 </script>
@@ -102,6 +105,18 @@ const isHome = computed(() => route.path === '/')
         
         <!-- Right side actions -->
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <!-- Dark mode toggle -->
+          <button
+            @click="toggleDarkMode"
+            class="flex items-center justify-center size-10 rounded-xl transition-all"
+            :class="dark 
+              ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white' 
+              : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'"
+            aria-label="Toggle dark mode"
+          >
+            <UIcon :name="isDark ? 'i-heroicons-sun' : 'i-heroicons-moon'" class="size-5" />
+          </button>
+          
           <slot name="actions">
             <!-- Default navigation links shown on home/project pages -->
             <NuxtLink
