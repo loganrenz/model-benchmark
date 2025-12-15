@@ -24,6 +24,11 @@ const form = ref({
 const isSaving = ref(false)
 const { showSuccess, showError } = useNotifications()
 
+const isMounted = ref(false)
+onMounted(() => {
+  isMounted.value = true
+})
+
 // Reset form when modal opens
 watch(() => props.open, (isOpenValue) => {
   if (isOpenValue) {
@@ -62,8 +67,8 @@ async function save() {
       })
       showSuccess('Project created successfully')
     }
-    isOpen.value = false
     emit('saved')
+    isOpen.value = false
   } catch (error: any) {
     const { getErrorMessage } = useErrorHandler()
     showError(getErrorMessage(error))
@@ -72,13 +77,16 @@ async function save() {
   }
 }
 
-function closeModal() {
-  isOpen.value = false
-}
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" :title="project ? 'Edit Project' : 'Create Project'" :ui="{ footer: 'justify-end' }">
+  <UModal 
+    v-if="isMounted"
+    v-model:open="isOpen" 
+    :title="project ? 'Edit Project' : 'Create Project'" 
+    :description="project ? 'Update project details' : 'Create a new project'" 
+    :ui="{ footer: 'justify-end' }"
+  >
     <template #body>
       <div class="space-y-4">
         <div>
@@ -106,12 +114,11 @@ function closeModal() {
       </div>
     </template>
 
-    <template #footer>
-      <UButton color="neutral" variant="outline" @click="closeModal">Cancel</UButton>
+    <template #footer="{ close }">
+      <UButton color="neutral" variant="outline" @click="close">Cancel</UButton>
       <UButton color="primary" :disabled="!canSave" :loading="isSaving" @click="save">
         {{ project ? 'Update' : 'Create' }}
       </UButton>
     </template>
   </UModal>
 </template>
-

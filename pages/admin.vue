@@ -354,11 +354,11 @@ const deleteProjectMessage = computed(() => {
             </div>
 
             <!-- Actions -->
-            <div class="shrink-0 flex flex-col gap-2">
-              <UButton color="neutral" variant="ghost" size="sm" @click.stop="openReviewModal(submission)">
+            <div class="shrink-0 flex flex-col gap-2" @click.stop.prevent>
+              <UButton color="neutral" variant="ghost" size="sm" @click="openReviewModal(submission)">
                 Review
               </UButton>
-              <UButton color="success" variant="ghost" size="sm" @click.stop="quickApproveSubmission(submission)">
+              <UButton color="success" variant="ghost" size="sm" @click="quickApproveSubmission(submission)">
                 Approve
               </UButton>
               <UButton color="primary" variant="outline" size="sm" :loading="generatingThumbnailFor === submission.id"

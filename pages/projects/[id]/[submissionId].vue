@@ -13,7 +13,7 @@ const { data: project } = await useFetch<Project>(
 )
 
 // Fetch submission info
-const { data: submission, error: submissionError } = await useFetch<Submission>(
+const { data: submission, error: submissionError, pending: submissionPending } = await useFetch<Submission>(
   `/api/submissions/${submissionId}`
 )
 
@@ -110,6 +110,8 @@ const submissionSrc = computed(() => {
 })
 
 const submissionHtmlContent = computed(() => {
+  // Always return htmlContent if available, regardless of status
+  // This allows viewing pending/rejected submissions in development
   if (submission.value && submission.value.htmlContent) {
     return submission.value.htmlContent
   }
@@ -180,6 +182,24 @@ onMounted(() => {
   // Reset loading state when submission changes
   watch(() => route.params.submissionId, () => {
     iframeLoading.value = true
+  })
+  
+  // Fallback: if iframe doesn't load within 10 seconds, hide loading
+  watch(() => [submissionSrc.value, submissionHtmlContent.value], () => {
+    if (submissionSrc.value || submissionHtmlContent.value) {
+      // Reset loading when we have content to display
+      iframeLoading.value = true
+      // Set timeout to hide loading if iframe doesn't fire load event
+      const timeoutId = setTimeout(() => {
+        if (iframeLoading.value) {
+          iframeLoading.value = false
+        }
+      }, 10000)
+      // Clean up timeout when component unmounts
+      onUnmounted(() => {
+        clearTimeout(timeoutId)
+      })
+    }
   })
 })
 
@@ -287,10 +307,13 @@ onUnmounted(() => {
     </div>
 
     <!-- Loading State -->
-    <div v-else-if="!submissionSrc && !submissionHtmlContent" class="flex flex-1 items-center justify-center">
+    <div v-else-if="submissionPending || (!submissionSrc && !submissionHtmlContent && !hasError)" class="flex flex-1 items-center justify-center">
       <div class="text-center">
         <div class="mx-auto mb-6 size-12 animate-spin rounded-full border-[3px] border-white/10 border-t-cyan-400"></div>
         <p class="text-sm font-medium text-slate-400">Loading submission...</p>
+        <p v-if="!submissionPending && !submissionSrc && !submissionHtmlContent" class="mt-2 text-xs text-slate-500">
+          No content available for this submission
+        </p>
       </div>
     </div>
 
@@ -369,6 +392,7 @@ onUnmounted(() => {
               class="size-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               @load="iframeLoading = false"
+              @error="iframeLoading = false"
             />
             <iframe
               v-else-if="submissionHtmlContent"
@@ -377,6 +401,7 @@ onUnmounted(() => {
               class="size-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               @load="iframeLoading = false"
+              @error="iframeLoading = false"
             />
           </div>
         </div>
