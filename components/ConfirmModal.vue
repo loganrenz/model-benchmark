@@ -102,7 +102,7 @@ const variantClasses = computed(() => {
         {{ cancelText }}
       </UButton>
       <UButton 
-        :color="variant === 'danger' ? 'error' : variant === 'warning' ? 'amber' : 'primary'"
+        :color="variant === 'danger' ? 'error' : variant === 'warning' ? 'warning' : 'primary'"
         @click="handleConfirm"
         aria-label="Confirm"
       >
