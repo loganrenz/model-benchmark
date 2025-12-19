@@ -15,24 +15,20 @@ This is an **AI agent benchmark/comparison tool**. Multiple AI agents (Claude, G
 4. Admins review and approve submissions
 5. Approved implementations appear on the site for comparison
 
-## ✨ New Features
+## Baseline capture & ledger updates
 
-### Dark Mode
-- Toggle between light and dark themes
-- Persistent preference across sessions
-- Accessible from the header on any page
+- **Curated starter URLs:** `urls/starter-1000.json` now ships with 86 deterministic, real endpoints (home, pricing, docs, status, terms, privacy, blog, security, etc.) across popular developer platforms.
+- **Tamper-evident ledger:** ledger entries are hash chained (`prev_entry_hash` + `entry_hash`) and can be verified locally with the included verification helper.
+- **Safe change detection:** large payloads avoid expensive LCS; a bounded line-based Jaccard similarity keeps comparisons lightweight while still flagging meaningful changes.
+- **Hardened fetcher:** explicit content-type allowlist, max-bytes streaming guard, redirect caps, and structured outcomes to avoid treating failures as successes.
+- **Consistent snapshots:** filesystem snapshot metadata now includes the written artifact path so JSON and on-disk bodies stay in sync.
 
-### Advanced Search & Filtering
-- **Search**: Real-time search across project names and IDs
-- **Sort**: By name, number of submissions, or newest first
-- **Filter**: Show/hide projects with no submissions
-- **Live Results**: See filtered count in real-time
+## Known limitations (v1)
 
-### Comparison View
-- **Side-by-Side Comparison**: Compare up to 4 submissions simultaneously
-- **Comparison Mode**: Select submissions directly from project pages
-- **Live Previews**: View all submissions in iframes side-by-side
-- **Easy Navigation**: Add/remove submissions from comparison on the fly
+- Single-process filesystem store by default; no distributed coordination yet.
+- No headless browser rendering or JavaScript execution in capture.
+- Only the curated starter URL list is provided; additional targets must be added manually.
+- CLI tooling is minimal; integrations beyond local workflows are out of scope for this release.
 
 ## Quick Start
 

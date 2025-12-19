@@ -6,7 +6,8 @@
     "dev": "node scripts/check-dev-server.js",
     "build": "nuxt build",
     "preview": "nuxt preview",
-    "deploy:pages": "npm run build && npx wrangler pages deploy dist --project-name=model-benchmark"
+    "deploy:pages": "npm run build && npx wrangler pages deploy dist --project-name=model-benchmark",
+    "test": "node --test"
   },
   "dependencies": {
     "@nuxt/icon": "^2.1.0",
